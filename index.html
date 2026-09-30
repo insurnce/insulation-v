@@ -310,7 +310,7 @@ td{font-variant-numeric:tabular-nums}
     <article class="doc" aria-label="Specimen policy document">
       <div class="doc-head">
         <div>
-          <h2 id="pTitle">Concert Postponement Cover</h2>
+          <h2 id="pTitle">Concert Trip Cover</h2>
           <p>Insulation V &middot; Parametric micro-insurance policy schedule</p>
         </div>
         <div class="polno">Policy number<b id="pNo"></b><span id="pIssued"></span></div>
@@ -418,32 +418,27 @@ td{font-variant-numeric:tabular-nums}
 
   // ---------- Stage products (fixed answers) ----------
   var CONCERT = {
-    kind:'concert', source:'data', name:'Concert Postponement Cover',
-    title:'Good news. We can cover this ticket.',
-    blurb:"If the show is cancelled, the organiser refunds your ticket. But if it is postponed, your ticket only works on the new date. If you can't make that date and no refund is offered, we pay you back.",
+    kind:'concert', source:'data', name:'Concert Trip Cover',
+    title:'Good news. We can cover this trip.',
+    blurb:"If the show is cancelled, the organiser refunds your ticket; if it is postponed, your ticket moves to the new date. Either way, nobody pays back the train, hotel and booking fees for the original date. We do.",
     L:1200, d:150, c:0.2, limit:960, p:0.0149, premium:25, maxL:5000,
-    checks:[[true,'Yes. You have already paid HK$1,200 for the ticket.'],[true,'Yes. A postponement can only cost you money.'],[true,'Yes. Typhoon, illness or stage failure moves the date, not you.'],[true,'Yes. At most 1.49% per concert (HKO data plus 1% other causes).']],
+    checks:[[true,'Yes. Train, hotel and fees are already paid.'],[true,'Yes. A cancellation or postponement can only cost you money.'],[true,'Yes. Typhoon, illness or stage failure.'],[true,'Yes. About 1.49% per concert (HKO data plus 1% other causes).']],
     item:'The Midnight Echoes, Live in Hong Kong', where:'Kai Tak Stadium', date:'2026-11-14',
-    labels:{item:'Concert', where:'Venue', date:'Concert date', cost:'Ticket price', whereDate:'Venue and date'},
-    hints:{date:'Sales close 72 hours before the show.', cost:'The face value of your ticket.'},
-    cutoff72:true, lossWord:'ticket price',
-    trigger:'We pay when the organiser publishes an official notice that the concert is postponed for a reason outside your control (Typhoon Signal No. 8 or above, Black Rainstorm, performer illness, or a stage or technical failure), no refund is offered, and you hand back your unused ticket through the ticketing platform before the new date. You do not need to explain why you cannot attend.',
-    exclusions:['Cancelled shows: the organiser refunds the ticket, so there is no loss to cover.','Postponements where the organiser offers a refund.','Keeping or using your ticket for the new date.','Postponements announced before this policy was bought. Sales close 72 hours before the show.','Losing a ticket rush or failing to buy a ticket.'],
-    basis:'Chance a concert is moved: 0.495% weather (47 concert evenings under Signal 8+ or Black Rain, HKO 2000–2025) + 1% other causes (assumption) = 1.49%. This counts every disruption as a postponement, so it is an upper bound: cancelled shows are refunded and never claim. Expected loss 1.49% × HK$840 = HK$12.56. Premium HK$25 includes loading for costs and capital.',
-    story:function(q){ return { text:'The organiser postponed “' + q.f.item + '” after Typhoon Signal No. 8 was issued, and the new date clashes with ' + q.first + "'s graduation. The ticket was handed back unused, so " + money(q.y) + ' is on its way. No form, no adjuster.', steps:['Typhoon Signal No. 8 issued (HKO)','Organiser posts official postponement notice; no refund offered'] }; }
+    labels:{item:'Concert', where:'Venue', date:'Concert date', cost:'Non-refundable trip costs', whereDate:'Venue and date'},
+    hints:{date:'Sales close 72 hours before the show.', cost:'Train, hotel and booking fees. Not the ticket itself.'},
+    cutoff72:true, lossWord:'trip costs',
+    trigger:'We pay when the organiser publishes an official notice that the concert is cancelled or postponed from its original date, for any reason outside your control: Typhoon Signal No. 8 or above, Black Rainstorm, performer illness, or a stage or technical failure. You do not need to file a claim.',
+    exclusions:['The ticket price, which the organiser refunds or moves to the new date.','Deciding not to attend when the show goes ahead.','Cancellations or postponements announced before this policy was bought. Sales close 72 hours before the show.','Losing a ticket rush or failing to buy a ticket.'],
+    basis:'Chance a concert is cancelled or postponed: 0.495% weather (47 concert evenings under Signal 8+ or Black Rain, HKO 2000–2025) + 1% other causes (assumption) = 1.49%. Expected loss 1.49% × HK$840 = HK$12.56. Premium HK$25 includes loading for costs and capital.',
+    story:function(q){ return { text:'The organiser postponed “' + q.f.item + '” after Typhoon Signal No. 8 was issued. The ticket moves to the new date, but the trip booked for tonight is wasted. ' + money(q.y) + ' is on its way to ' + q.first + '. No form, no adjuster.', steps:['Typhoon Signal No. 8 issued (HKO)','Organiser posts official postponement notice'] }; }
   };
   var RUSH = {
     reasons:["You don't own a ticket yet, so there is no financial loss to cover.",'Missing out in a sold-out sale is almost certain, so a fair premium would cost almost as much as the ticket.'],
-    ev:'Fair premium if the chance of loss is 90%: 0.9 × HK$840 = HK$756, before any costs. Nobody would pay that to protect a HK$1,200 ticket.',
+    ev:'Fair premium if the chance of loss is 90%: 0.9 × HK$840 = HK$756, before any costs. Nobody would pay that to protect a HK$1,200 trip.',
     note:'Declining protects everyone else in the pool. Covering the ticket rush would invite scalping.',
     checks:[[false,"No. You haven't paid for a ticket yet."],[false,'No. A resold ticket could even make a profit.'],[false,'Partly. You choose to join the sale.'],[false,'No. Missing out on a sold-out sale is almost certain.']]
   };
-  var CANCELLED = {
-    reasons:['When a concert is cancelled, the organiser refunds your ticket, so there is no loss left to insure.','Postponement is different: your ticket only works on the new date. Try "have concert tickets but concert postponed".'],
-    note:'We only sell cover where a real loss is left over.',
-    checks:[[false,'No. The organiser refunds the ticket.'],[true,'Yes. A cancellation can only cost you money.'],[true,'Yes. Typhoon, illness or stage failure.'],[true,'Yes. Rare.']]
-  };
-  var DEMO = {'cannot get concert tickets':'rush',"can't get concert tickets":'rush','have concert tickets but concert postponed':'concert','have concert ticket but concert postponed':'concert','have concert tickets but concert cancelled':'cancelled'};
+  var DEMO = {'cannot get concert tickets':'rush',"can't get concert tickets":'rush','have concert tickets but concert cancelled':'concert','have concert ticket but concert cancelled':'concert','have concert tickets but concert postponed':'concert','have concert ticket but concert postponed':'concert'};
 
   // ---------- Built-in products, used when the AI underwriter is unavailable ----------
   function generic(o){
@@ -488,12 +483,10 @@ td{font-variant-numeric:tabular-nums}
       checks:[[true,'Yes. Money was lost.'],[true,'Yes. It was only a loss.'],[true,'Yes. It was an accident.'],[false,'No. It already happened, so the chance is 100%.']] }
   ];
   function rushLike(t){ return /can'?t get|cannot get|can not get|couldn'?t get|fail to get|fight for|ticket rush|sold out|sell out|buy tickets?|get (a )?tickets?|miss out|搶飛|搶票|買唔到|抢票|買不到/.test(t) && !/have (a |concert )?tickets?|already (bought|have)|got my ticket|有飛|已買/.test(t); }
-  function concertCancel(t){ return /concert|show|gig|演唱會|騷/.test(t) && /postpone|reschedul|moved|new date|clash|typhoon|rainstorm|black rain|signal 8|延期|改期|颱風|暴雨/.test(t); }
-  function concertCancelOnly(t){ return /concert|show|gig|演唱會|騷/.test(t) && /cancel|called off|取消/.test(t) && !/postpone|reschedul|延期|改期/.test(t); }
+  function concertCancel(t){ return /concert|show|gig|演唱會|騷/.test(t) && /cancel|postpone|reschedul|called off|new date|typhoon|rainstorm|black rain|signal 8|取消|延期|改期|颱風|暴雨/.test(t); }
 
   function offline(t){
     if (rushLike(t)) return {verdict:'rush'};
-    if (concertCancelOnly(t)) return {verdict:'cancelled'};
     if (concertCancel(t)) return {verdict:'concert'};
     for (var i=0;i<DECLINES.length;i++) if (DECLINES[i].test.test(t)) return {verdict:'no', reasons:DECLINES[i].reasons, checks:DECLINES[i].checks};
     for (var j=0;j<PRESETS.length;j++) if (PRESETS[j].test.test(t)) return {verdict:'yes', product:PRESETS[j].make()};
@@ -557,7 +550,6 @@ td{font-variant-numeric:tabular-nums}
   function decide(res){
     if (res.verdict === 'rush') return reveal(RUSH.checks, function(){ showNo(RUSH.reasons, RUSH.ev, RUSH.note); });
     if (res.verdict === 'concert') return reveal(CONCERT.checks, function(){ showYes(CONCERT); });
-    if (res.verdict === 'cancelled') return reveal(CANCELLED.checks, function(){ showNo(CANCELLED.reasons, '', CANCELLED.note); });
     if (res.verdict === 'yes') return reveal(res.product.checks, function(){ showYes(res.product); });
     if (res.verdict === 'no'){
       var ev = '';
@@ -610,7 +602,7 @@ td{font-variant-numeric:tabular-nums}
     $('hDate').textContent = P.hints.date; $('hCost').textContent = P.hints.cost || '';
     $('fEvent').value = P.item; $('fVenue').value = P.where; $('fDate').value = P.date; $('fCost').value = P.L; $('fCost').max = P.maxL;
     $('qPrem').textContent = money(P.premium); $('qDed').textContent = money(P.d); $('qCo').textContent = Math.round(P.c*100) + '%'; $('qLim').textContent = money(P.limit);
-    $('qIf').textContent = P.kind === 'concert' ? 'If the show is postponed' : 'If the trigger happens';
+    $('qIf').textContent = P.kind === 'concert' ? 'If the show is cancelled or postponed' : 'If the trigger happens';
     $('qProb').textContent = 'Chance per policy: ' + pct(P.p) + '. Expected loss: HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '.';
     show(['viewCheck','viewYes']); updateQuote();
     $('viewYes').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
@@ -643,13 +635,13 @@ td{font-variant-numeric:tabular-nums}
     var P = product, now = new Date();
     step(3);
     $('pTitle').textContent = P.name;
-    $('pNo').textContent = (P.kind === 'concert' ? 'IV-CPC-2026-' : 'IV-' + P.name.replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase() + '-2026-') + String(100000 + Math.floor(Math.random()*900000)).slice(1);
+    $('pNo').textContent = (P.kind === 'concert' ? 'IV-CTC-2026-' : 'IV-' + P.name.replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase() + '-2026-') + String(100000 + Math.floor(Math.random()*900000)).slice(1);
     $('pIssued').textContent = 'Issued ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + ' ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     $('pName').textContent = q.f.name;
-    $('pEvent').textContent = P.kind === 'concert' ? 'Postponement of “' + q.f.item + '”' : q.f.item;
+    $('pEvent').textContent = P.kind === 'concert' ? 'Cancellation or postponement of “' + q.f.item + '”' : q.f.item;
     $('pWhereLabel').textContent = P.labels.whereDate;
     $('pWhere').textContent = (q.f.where ? q.f.where + ', ' : '') + (P.kind === 'concert' ? '' : 'from ') + fmtDate(q.f.date);
-    $('pCost').textContent = money(q.L) + (P.kind === 'concert' ? ' (ticket face value)' : '');
+    $('pCost').textContent = money(q.L) + (P.kind === 'concert' ? ' (train, hotel, booking fees)' : '');
     $('pPrem').textContent = money(P.premium);
     $('pDed').textContent = money(P.d) + ' / ' + Math.round(P.c*100) + '%';
     $('pLim').textContent = money(P.limit);
