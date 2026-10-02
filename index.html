@@ -578,6 +578,7 @@ td{font-variant-numeric:tabular-nums}
     var pSteps = (Array.isArray(r.probability_steps) ? r.probability_steps : []).map(String).filter(Boolean).slice(0,5);
     if (!pSteps.length) pSteps = [String(r.probability_basis || 'The AI gave no working for this estimate.')];
     var pType = /^(data|proxy|assumption)$/.test(r.probability_source_type) ? r.probability_source_type : 'assumption';
+    if (pType !== 'assumption' && /^\s*assum/i.test(pSteps[0])) pType = 'assumption';   // a guess is never labelled as data
     var P = generic({ source:'ai', name:String(r.product_name||'Micro-risk Cover').slice(0,60), item:String(r.covered_item||text).slice(0,120),
       blurb:String(r.summary||''), L:L, d:clamp(r.deductible_hkd, 0, L*0.5), p:pp, checks:checks,
       period:String(r.policy_period||'one policy period').slice(0,40), pType:pType, pRange:pRange, pRangeWhy:String(r.probability_range_why||'AI range'),
@@ -667,8 +668,9 @@ td{font-variant-numeric:tabular-nums}
       if (c){ ps[1].innerHTML = '<em>Your request:</em> '; ps[1].appendChild(document.createTextNode(c[1])); } else ps[1].remove();
       ul.appendChild(li);
     });
-    $('whyFix').textContent = info.fix ? 'What could work instead: ' + info.fix : '';
-    $('whyFix').hidden = !info.fix;
+    var fix = /^\s*(nothing|none|n\/a)\b/i.test(info.fix || '') ? '' : info.fix;
+    $('whyFix').textContent = fix ? 'What could work instead: ' + fix : '';
+    $('whyFix').hidden = !fix;
     toggle('whyBtn', 'whyPanel', false);
     show(['viewCheck','viewNo']);
     $('viewNo').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
