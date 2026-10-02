@@ -657,6 +657,17 @@ td{font-variant-numeric:tabular-nums}
         [true,'Yes. A small loss with a repair invoice.','The loss is small and a repair invoice is an objective record.']],
       consequence:'At about 1 in 5 phones a year, the premium would be about 21% of the repair cost before costs, and about 42% after our loading, so customers would do better saving the money themselves.',
       fix:'Theft of a phone is rare enough to price from Police data: about 0.15% a year. Try "my phone gets stolen".' },
+    { test:/funeral|death|\bdie\b|dying|life insurance|life cover|cancer|hospital|surgery|medical|殯|喪|身故|醫療|住院|癌/, kind:'declined',
+      loss:'Funeral, hospital or medical costs: a real money loss, but one that depends on health and can be very large.',
+      reasons:['Life, funeral and medical cover are outside micro-insurance: fair prices need medical checks for each person, and claims can exceed our HK$20,000 limit.','Licensed life and health insurers offer this cover.'],
+      checks:[
+        [true,'Yes. These are real costs.','Funeral and medical bills are money your family would really pay, so this test is passed.'],
+        [true,'Yes. Illness or death can only cost money.','A death or an illness cannot make anyone better off financially, so this is a pure risk.'],
+        [true,'Mostly. Nobody chooses illness or death.','These events are not chosen, although health and lifestyle affect the chance, which is why life insurers ask medical questions.'],
+        [null,'Not assessed: already fails another test.','Because the request falls outside our scope (test 5), we did not price it. Death and illness rates are published, but a fair price needs each person\'s age and health.'],
+        [false,'No. Life and medical cover are outside our scope.','Our scope excludes life, funeral and serious medical cover. Fair pricing needs a medical check for each person, and claims can be far above our HK$20,000 limit.']],
+      consequence:'Without medical checks, the people most likely to claim would be the most likely to buy (adverse selection). Claims would be large and frequent, and a pool built for HK$100–20,000 losses would run out of money.',
+      fix:'A licensed life or health insurer can offer this. We can cover small, sudden losses such as theft, delayed baggage or a typhoon cancelling a trip.' },
     { test:/(lose|lost|losing|唔見|遺失|跌咗)/, unless:/stolen|steal|theft|pickpocket|snatch|偷|扒|搶/, kind:'no_data',
       loss:'The item and its replacement cost, for example the cash and cards in a wallet.',
       reasons:['We found no published data on how often people in Hong Kong lose this kind of item, so any price would be a guess.','To price it we would need a published count of lost-property reports per year, divided by the population.'],
@@ -738,25 +749,41 @@ td{font-variant-numeric:tabular-nums}
   ];
   function rushLike(t){ return /can'?t get|cannot get|can not get|couldn'?t get|fail to get|fight for|ticket rush|sold out|sell out|buy tickets?|get (a )?tickets?|miss out|搶飛|搶票|買唔到|抢票|買不到/.test(t) && !/have (a |concert )?tickets?|already (bought|have)|got my ticket|有飛|已買/.test(t); }
   function concertCancel(t){ return /concert|show|gig|演唱會|騷/.test(t) && /cancel|postpone|reschedul|called off|new date|typhoon|rainstorm|black rain|signal 8|取消|延期|改期|颱風|暴雨/.test(t); }
+  // Fixed, hand-checked answers that never go to the AI: concerts, every built-in decline, and flights.
   function builtIn(t){
     if (rushLike(t)) return {verdict:'no', info:RUSH};
     if (concertCancel(t)) return {verdict:'concert'};
+    for (var i=0;i<DECLINES.length;i++){ var D = DECLINES[i]; if (D.test.test(t) && !(D.unless && D.unless.test(t))) return {verdict:'no', info:D}; }
+    if (PRESETS[0].test.test(t) && !/typhoon|颱風|打風/.test(t)) return {verdict:'yes', product:PRESETS[0].make()};
     return null;
   }
   function offline(t){
     var b = builtIn(t); if (b) return b;
-    for (var i=0;i<DECLINES.length;i++){ var D = DECLINES[i]; if (D.test.test(t) && !(D.unless && D.unless.test(t))) return {verdict:'no', info:D}; }
     for (var j=0;j<PRESETS.length;j++) if (PRESETS[j].test.test(t)) return {verdict:'yes', product:PRESETS[j].make()};
     return {verdict:'unknown'};
   }
+  // A data row only counts if the request is about the event it measures (same guard as the Worker).
+  var ROW_MATCH = {
+    theft_person:/steal|stole|theft|thief|pickpocket|snatch|rob|偷|扒|搶|盜/i, theft_property:/steal|stole|theft|thief|pickpocket|snatch|rob|偷|扒|搶|盜/i,
+    burglary:/burglar|break.?in|broken into|intruder|爆竊|入屋|爆格/i,
+    typhoon_day:/typhoon|signal|t8|颱風|打風|八號|flight|plane|trip|travel|ferry|holiday|航班|飛機|旅行|船/i,
+    storm_daytime:/typhoon|rain|storm|weather|signal|outdoor|wedding|picnic|hike|barbecue|bbq|camp|event|颱風|打風|雨|天氣|戶外|婚禮|活動/i,
+    storm_evening:/typhoon|rain|storm|weather|signal|outdoor|wedding|dinner|party|event|show|night|evening|颱風|打風|雨|天氣|戶外|婚禮|活動|晚/i,
+    bag_delay:/bag|luggage|suitcase|baggage|行李|喼/i, phone_screen:/screen|crack|display|屏|mon/i };
 
   // ---------- AI underwriter ----------
   // The prompt and the data table live in the Worker; it returns checks, a verdict and a data-based price.
   function fromAI(r, text){
     if (!r || typeof r !== 'object' || !Array.isArray(r.checks)) throw {code:'bad_shape'};
+    if (!r.verdict) throw {code:'old_worker'};   // an older Worker can return guessed prices: use the built-in answers instead
     var checks = TESTS.map(function(_, i){ var c = r.checks[i] || {}; return [c.pass === null ? null : c.pass !== false, String(c.reason || ''), String(c.facts || '')]; });
-    var hasP = typeof r.probability === 'number' && Array.isArray(r.probability_steps);
+    var rowOk = !r.reference_id || !ROW_MATCH[r.reference_id] || ROW_MATCH[r.reference_id].test(text);
+    var hasP = rowOk && !!r.reference_id && typeof r.probability === 'number' && Array.isArray(r.probability_steps);
     var verdict = r.verdict || (r.insurable ? 'insurable' : 'declined');
+    if (!rowOk){
+      checks[3] = [false, 'Cannot be measured from published data.', 'The closest data we hold measures a different event, so it cannot price this request.'];
+      verdict = [0,1,2,4].some(function(i){ return checks[i][0] === false; }) ? 'declined' : 'no_data';
+    }
     if (verdict === 'insurable' && !hasP) verdict = 'no_data';
     var info = { loss:String(r.loss || ''), checks:checks, consequence:String(r.if_insured_anyway || ''),
       fix:String(r.what_would_change || ''), dataNeeded:String(r.data_needed || ''), pSteps:hasP ? r.probability_steps : null };
@@ -860,7 +887,7 @@ td{font-variant-numeric:tabular-nums}
     para(item('Decision'), '', decision);
     if (kind !== 'insurable' && info.consequence) para(item('If we covered it anyway'), '', info.consequence);
     if (kind === 'no_data' && info.dataNeeded) para(item('What data would let us price it'), '', info.dataNeeded);
-    var fix = /^\s*(nothing|none|n\/a)\b/i.test(info.fix || '') ? '' : info.fix;
+    var fix = /^\s*(nothing|none|n\/a)\b/i.test(info.fix || '') || /^[a-z_]+$/.test(String(info.fix || '').trim()) ? '' : info.fix;
     if (kind !== 'insurable' && fix) para(item('What we can cover instead'), '', fix);
   }
 
