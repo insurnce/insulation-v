@@ -762,6 +762,14 @@ td{font-variant-numeric:tabular-nums}
     for (var j=0;j<PRESETS.length;j++) if (PRESETS[j].test.test(t)) return {verdict:'yes', product:PRESETS[j].make()};
     return {verdict:'unknown'};
   }
+  var ROW_TRIGGER = {
+    theft_person:['We pay when you file a police report of pickpocketing or snatching.','a police report of pickpocketing or snatching'],
+    theft_property:['We pay when you file a police report for theft of the insured item.','a police theft report is filed'],
+    burglary:['We pay when a police report confirms a burglary at the insured home.','a police burglary report is filed'],
+    typhoon_day:['We pay when the Hong Kong Observatory has Typhoon Signal No. 8 or higher in force at any time on a covered day.','HKO Signal No. 8 in force on a covered day'],
+    storm_daytime:['We pay when the Hong Kong Observatory has a Black Rainstorm Warning or Typhoon Signal No. 8 or higher in force between 09:00 and 18:00 on a covered day.','HKO Black Rain or Signal No. 8 in force during the day'],
+    storm_evening:['We pay when the Hong Kong Observatory has a Black Rainstorm Warning or Typhoon Signal No. 8 or higher in force between 17:00 and 23:00 on a covered evening.','HKO Black Rain or Signal No. 8 in force during the evening'],
+    bag_delay:['We pay when the airline issues a Property Irregularity Report confirming your checked bag was delayed.','the airline issues a delayed-bag report'] };
   // A data row only counts if the request is about the event it measures (same guard as the Worker).
   var ROW_MATCH = {
     theft_person:/steal|stole|theft|thief|pickpocket|snatch|rob|偷|扒|搶|盜/i, theft_property:/steal|stole|theft|thief|pickpocket|snatch|rob|偷|扒|搶|盜/i,
@@ -789,12 +797,15 @@ td{font-variant-numeric:tabular-nums}
       fix:String(r.what_would_change || ''), dataNeeded:String(r.data_needed || ''), pSteps:hasP ? r.probability_steps : null };
     if (verdict !== 'insurable'){
       info.kind = verdict === 'no_data' ? 'no_data' : 'declined';
-      var reasons = (Array.isArray(r.decline_reasons) ? r.decline_reasons : []).map(String).filter(Boolean).slice(0,3);
+      // The summary is built from the failed tests, so it can never contradict them.
+      var reasons = checks.map(function(c, i){ return c[0] === false ? TESTS[i].name + ': ' + (c[2] || c[1]) : ''; }).filter(Boolean);
+      if (!reasons.length) reasons = (Array.isArray(r.decline_reasons) ? r.decline_reasons : []).map(String).filter(Boolean).slice(0,3);
       if (info.kind === 'no_data') reasons = ['We found no published data that measures how often this happens, so any price would be a guess.'].concat(info.dataNeeded ? ['To price it we would need: ' + info.dataNeeded] : []);
       info.reasons = reasons.length ? reasons : ['It does not pass the insurability tests above.'];
       return {verdict:'no', info:info};
     }
-    var L = clamp(r.amount_at_risk_hkd, 100, 20000);
+    var L = clamp(r.amount_at_risk_hkd, 100, 20000), T = ROW_TRIGGER[r.reference_id];   // the trigger must be the event the data counts
+    if (T){ r.trigger = T[0]; r.trigger_short = T[1]; }
     var P = generic({ origin:'ai', name:String(r.product_name || 'Micro-risk Cover').slice(0,60), item:String(r.covered_item || text).slice(0,120),
       blurb:String(r.summary || ''), loss:info.loss, L:L, d:clamp(r.deductible_hkd, 0, L*0.5), p:Math.max(r.probability, 0.00001), checks:checks,
       period:String(r.policy_period || 'one policy period'), dataSource:String(r.data_source || 'published data'),
