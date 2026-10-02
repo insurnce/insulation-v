@@ -191,6 +191,30 @@ td{font-variant-numeric:tabular-nums}
 .verdict ul.reasons{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
 .examples .chip.alt{border-style:solid;border-color:var(--line);color:var(--muted)}
 .meta{font-size:12px;color:var(--muted)}
+
+/* optional explanations */
+.linkbtn{background:none;border:0;padding:0;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;align-self:flex-start}
+.why{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.why ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.why-tests{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.why-tests li{display:grid;grid-template-columns:26px 1fr;gap:10px}
+.why-tests .ic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+.why-tests li.pass .ic{background:var(--yes-bg);color:var(--yes)}
+.why-tests li.fail .ic{background:var(--no-bg);color:var(--no)}
+.why-tests b{display:block}
+.why-tests p,.why .muted{color:var(--muted)}
+.why-tests p em{font-style:normal;color:var(--ink)}
+
+/* pool simulation */
+.sim{border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.sim h3{font-size:18px}
+.sim-model{font-family:var(--mono);font-size:13px;background:var(--surface);border-radius:8px;padding:10px 12px;line-height:1.5}
+.sim-chart{width:100%;height:300px}
+.sim-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sim-stats div{background:var(--surface);border-radius:10px;padding:8px 10px}
+.sim-stats span{display:block;font-size:12px;color:var(--muted)}
+.sim-stats b{font-variant-numeric:tabular-nums}
+@media (max-width:640px){ .sim-stats{grid-template-columns:repeat(2,1fr)} }
 </style>
 
 <div class="wrap">
@@ -260,7 +284,16 @@ td{font-variant-numeric:tabular-nums}
       <ul class="reasons" id="noReasons"></ul>
       <div class="ev" id="noEv"></div>
       <p class="note" id="noNote"></p>
-      <div class="row"><button class="btn btn-ghost" type="button" data-reset>Try another request</button></div>
+      <div class="why" id="whyPanel" hidden>
+        <p id="whyLead"></p>
+        <ul class="why-tests" id="whyTests"></ul>
+        <p id="whyFix"></p>
+        <p class="muted">Scope: Insulation V only covers small, sudden money losses of HK$100–20,000 with an objective trigger. Life, funeral, serious medical and large losses belong with a licensed insurer.</p>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost" type="button" id="whyBtn" aria-expanded="false" aria-controls="whyPanel">Explain why in detail</button>
+        <button class="btn btn-ghost" type="button" data-reset>Try another request</button>
+      </div>
     </div>
   </section>
 
@@ -299,6 +332,12 @@ td{font-variant-numeric:tabular-nums}
           <div class="big"><span id="qIf">If it happens</span><b id="qPay"></b></div>
           <p class="note" id="qWork"></p>
           <p class="meta" id="qProb"></p>
+          <button class="linkbtn" type="button" id="probBtn" aria-expanded="false" aria-controls="probPanel">How did we get this chance?</button>
+          <div class="why" id="probPanel" hidden>
+            <span class="badge" id="probType"></span>
+            <ol id="probSteps"></ol>
+            <p class="muted" id="probRange"></p>
+          </div>
           <button class="btn btn-primary" id="buyBtn" type="button">Get my policy <span aria-hidden="true">&rarr;</span></button>
         </div>
       </div>
@@ -361,6 +400,15 @@ td{font-variant-numeric:tabular-nums}
       <p id="payText"></p>
       <div class="tl" id="payTl"></div>
     </div>
+
+    <section class="sim" id="simBox" hidden aria-labelledby="simTitle">
+      <h3 id="simTitle">The pool behind your payout</h3>
+      <p class="note" id="simLead"></p>
+      <p class="sim-model" id="simModel"></p>
+      <div class="sim-chart" id="simChart" role="img"></div>
+      <div class="sim-stats" id="simStats"></div>
+      <p class="note" id="simNote"></p>
+    </section>
 
     <div class="row" style="margin-top:16px">
       <button class="btn btn-primary" id="simBtn" type="button">Simulate: the trigger happens</button>
@@ -430,12 +478,20 @@ td{font-variant-numeric:tabular-nums}
     trigger:'We pay when the organiser publishes an official notice that the concert is cancelled or postponed from its original date, for any reason outside your control: Typhoon Signal No. 8 or above, Black Rainstorm, performer illness, or a stage or technical failure. You do not need to file a claim.',
     exclusions:['The ticket price, which the organiser refunds or moves to the new date.','Deciding not to attend when the show goes ahead.','Cancellations or postponements announced before this policy was bought. Sales close 72 hours before the show.','Losing a ticket rush or failing to buy a ticket.'],
     basis:'Chance a concert is cancelled or postponed: 0.495% weather (47 concert evenings under Signal 8+ or Black Rain, HKO 2000–2025) + 1% other causes (assumption) = 1.49%. Expected loss 1.49% × HK$840 = HK$12.56. Premium HK$25 includes loading for costs and capital.',
+    period:'one concert', pType:'data', pTypeText:'Weather part from HKO data; other causes are an assumption',
+    pSteps:['HKO warning records 2000–2025: 47 concert evenings (17:00–23:00) had Typhoon Signal 8+ or Black Rain in force.',
+      '47 ÷ (26 years × 365.25 evenings) = 0.495% weather chance per concert.',
+      'Other causes (performer illness, stage failure): 1%. This is an assumption from documented cases (Andy Lau 2018, Sammi Cheng 2026); no complete public count exists.',
+      '0.495% + 1% = 1.49% per concert.'],
+    pRange:[0.00995, 0.02495], pRangeWhy:'other causes between 0.5% and 2%',
     story:function(q){ return { text:'The organiser postponed “' + q.f.item + '” after Typhoon Signal No. 8 was issued. The ticket moves to the new date, but the trip booked for tonight is wasted. ' + money(q.y) + ' is on its way to ' + q.first + '. No form, no adjuster.', steps:['Typhoon Signal No. 8 issued (HKO)','Organiser posts official postponement notice'] }; }
   };
   var RUSH = {
     reasons:["You don't own a ticket yet, so there is no financial loss to cover.",'Missing out in a sold-out sale is almost certain, so a fair premium would cost almost as much as the ticket.'],
     ev:'Fair premium if the chance of loss is 90%: 0.9 × HK$840 = HK$756, before any costs. Nobody would pay that to protect a HK$1,200 trip.',
     note:'Declining protects everyone else in the pool. Covering the ticket rush would invite scalping.',
+    detail:'Insurance pays back money you have already put at risk. Before the sale you have paid nothing, so there is nothing to pay back. And in a sold-out rush most fans miss out, so the "accident" is the normal outcome: the fair premium would be almost the price of the trip.',
+    fix:'Once you hold a ticket and have booked travel, the cancellation or postponement of the show is insurable: try "have concert tickets but concert postponed".',
     checks:[[false,"No. You haven't paid for a ticket yet."],[false,'No. A resold ticket could even make a profit.'],[false,'Partly. You choose to join the sale.'],[false,'No. Missing out on a sold-out sale is almost certain.']]
   };
   var DEMO = {'cannot get concert tickets':'rush',"can't get concert tickets":'rush','have concert tickets but concert cancelled':'concert','have concert ticket but concert cancelled':'concert','have concert tickets but concert postponed':'concert','have concert ticket but concert postponed':'concert'};
@@ -447,10 +503,14 @@ td{font-variant-numeric:tabular-nums}
       checks:o.checks, item:o.item, where:o.where||'Hong Kong', date:isoIn(7),
       labels:{item:'What is covered', where:'Where', date:'Cover starts', cost:'Amount at risk', whereDate:'Where and when'},
       hints:{date:'Cover runs for one policy period from this date.', cost:o.costHint}, cutoff72:false, lossWord:'amount at risk',
-      trigger:o.trigger, exclusions:o.exclusions, pBasis:o.pBasis, triggerShort:o.triggerShort };
+      trigger:o.trigger, exclusions:o.exclusions, pBasis:o.pBasis, triggerShort:o.triggerShort,
+      period:o.period || 'one policy period', pType:o.pType || 'assumption', pTypeText:o.pTypeText,
+      pSteps:(o.pSteps && o.pSteps.length) ? o.pSteps : ['No dataset in this demo: ' + pct(o.p) + ' is an illustrative assumption.', 'To verify: ' + o.pBasis.replace(/^illustrative assumption; /,'') + '.'],
+      pRange:o.pRange || [o.p/2, Math.min(o.p*2, 0.2)], pRangeWhy:o.pRangeWhy || 'half to double the assumption' };
+    if (!P.pTypeText) P.pTypeText = P.pType === 'data' ? 'Based on public data' : P.pType === 'proxy' ? 'Based on related (proxy) data' : 'Assumption, no direct data';
     P.limit = o.limit || Math.round((o.L - o.d) * 0.8 / 10) * 10;
     P.premium = priceOf(P);
-    P.basis = 'Chance the trigger happens: ' + pct(P.p) + ' per policy (' + P.pBasis + '). Expected loss ' + pct(P.p) + ' × ' + money(payoutOf(P,P.L)) + ' = HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '. Premium = expected loss × (1 + 100% loading), rounded to HK$5, minimum HK$10.';
+    P.basis = 'Chance the trigger happens: ' + pct(P.p) + ' per policy, ' + P.period + ' (' + P.pBasis + '). How: ' + P.pSteps.join(' ') + ' Expected loss ' + pct(P.p) + ' × ' + money(payoutOf(P,P.L)) + ' = HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '. Premium = expected loss × (1 + 100% loading), rounded to HK$5, minimum HK$10.';
     P.story = function(q){ return { text:'Trigger confirmed: ' + P.triggerShort + '. ' + money(q.y) + ' is on its way to ' + q.first + '. No form, no adjuster.', steps:[cap(P.triggerShort),'Record checked against the official source'] }; };
     return P;
   }
@@ -476,10 +536,16 @@ td{font-variant-numeric:tabular-nums}
   ];
   var DECLINES = [
     { test:/lottery|mark six|六合彩|bet|gambl|casino|賭|stock|shares|crypto|bitcoin|股票|幣/, reasons:['This is speculation: you can win as well as lose, so it is not a pure risk.','The outcome depends on choices you make, which invites moral hazard.'],
+      detail:'A bet or an investment is a risk you take on purpose, hoping to gain. If we paid you when you lose, you would keep the wins and pass the losses to the pool, so everyone would bet more. The house edge also means losing is the expected outcome, not an accident.',
+      fix:'Nothing makes a bet insurable. A sudden loss you did not choose, such as a cracked phone screen or a delayed flight, can be.',
       checks:[[false,'Partly. You only risk money you choose to stake.'],[false,'No. You could win as well as lose.'],[false,'No. You decide to bet or invest.'],[false,'No. Losing is the most likely outcome.']] },
     { test:/exam|dse|grade|考試|fail my/, reasons:['The result depends largely on your own effort, so it is not outside your control.','There is no fixed money loss to measure.'],
+      detail:'Your result depends mostly on how you prepare, so cover would weaken the reason to study (moral hazard). There is also no public, objective money loss we could pay against.',
+      fix:'A non-refundable exam fee lost to an official exam cancellation (e.g. HKEAA cancels a paper for a typhoon) would be insurable.',
       checks:[[false,'No. There is no fixed money loss.'],[true,'Yes. Failing can only cost you.'],[false,'No. It depends on your own effort.'],[false,'Cannot be priced while you control it.']] },
     { test:/already|yesterday|last week|已經|琴日/, reasons:['The loss has already happened. Insurance only covers uncertain future events.'],
+      detail:'Insurance shares the cost of uncertain future events across a pool. A loss that has already happened has a 100% chance, so the fair premium equals the loss itself; covering it would just move the cost to other customers.',
+      fix:'Cover the next time instead: buy before the risky event, while the outcome is still uncertain.',
       checks:[[true,'Yes. Money was lost.'],[true,'Yes. It was only a loss.'],[true,'Yes. It was an accident.'],[false,'No. It already happened, so the chance is 100%.']] }
   ];
   function rushLike(t){ return /can'?t get|cannot get|can not get|couldn'?t get|fail to get|fight for|ticket rush|sold out|sell out|buy tickets?|get (a )?tickets?|miss out|搶飛|搶票|買唔到|抢票|買不到/.test(t) && !/have (a |concert )?tickets?|already (bought|have)|got my ticket|有飛|已買/.test(t); }
@@ -488,7 +554,7 @@ td{font-variant-numeric:tabular-nums}
   function offline(t){
     if (rushLike(t)) return {verdict:'rush'};
     if (concertCancel(t)) return {verdict:'concert'};
-    for (var i=0;i<DECLINES.length;i++) if (DECLINES[i].test.test(t)) return {verdict:'no', reasons:DECLINES[i].reasons, checks:DECLINES[i].checks};
+    for (var i=0;i<DECLINES.length;i++) if (DECLINES[i].test.test(t)) return {verdict:'no', reasons:DECLINES[i].reasons, checks:DECLINES[i].checks, detail:DECLINES[i].detail, fix:DECLINES[i].fix};
     for (var j=0;j<PRESETS.length;j++) if (PRESETS[j].test.test(t)) return {verdict:'yes', product:PRESETS[j].make()};
     return {verdict:'unknown'};
   }
@@ -503,11 +569,19 @@ td{font-variant-numeric:tabular-nums}
       var reasons = (Array.isArray(r.decline_reasons) ? r.decline_reasons : []).map(String).filter(Boolean).slice(0,3);
       if (p != null && p >= 0.2 && r.insurable) reasons.push('The chance of loss is about ' + pct(p) + ', too high to price affordably.');
       if (!reasons.length) reasons = ['It does not pass the insurability tests above.'];
-      return {verdict:'no', reasons:reasons, checks:checks, p:p, L:Number(r.amount_at_risk_hkd)||0};
+      return {verdict:'no', reasons:reasons, checks:checks, p:p, L:Number(r.amount_at_risk_hkd)||0,
+        detail:String(r.decline_detail||''), fix:String(r.what_would_change||'')};
     }
     var L = clamp(r.amount_at_risk_hkd, 100, 20000);
+    var pp = (p==null?0.02:Math.max(p,0.001)), rg = Array.isArray(r.probability_range) ? r.probability_range.map(Number) : [];
+    var pRange = (rg.length === 2 && isFinite(rg[0]) && isFinite(rg[1])) ? [clamp(Math.min(rg[0],pp),0.0005,1), clamp(Math.max(rg[1],pp),0,1)] : null;
+    var pSteps = (Array.isArray(r.probability_steps) ? r.probability_steps : []).map(String).filter(Boolean).slice(0,5);
+    if (!pSteps.length) pSteps = [String(r.probability_basis || 'The AI gave no working for this estimate.')];
+    var pType = /^(data|proxy|assumption)$/.test(r.probability_source_type) ? r.probability_source_type : 'assumption';
     var P = generic({ source:'ai', name:String(r.product_name||'Micro-risk Cover').slice(0,60), item:String(r.covered_item||text).slice(0,120),
-      blurb:String(r.summary||''), L:L, d:clamp(r.deductible_hkd, 0, L*0.5), p:(p==null?0.02:Math.max(p,0.001)), checks:checks,
+      blurb:String(r.summary||''), L:L, d:clamp(r.deductible_hkd, 0, L*0.5), p:pp, checks:checks,
+      period:String(r.policy_period||'one policy period').slice(0,40), pType:pType, pRange:pRange, pRangeWhy:String(r.probability_range_why||'AI range'),
+      pSteps:pSteps,
       costHint:String(r.amount_help||''), trigger:String(r.trigger||'We pay when an official record confirms the insured event.'),
       triggerShort:String(r.trigger_short||'the insured event is confirmed'), exclusions:(Array.isArray(r.exclusions)?r.exclusions:[]).map(String).slice(0,4),
       pBasis:String(r.probability_basis||'AI estimate').replace(/\.$/,'') + '; AI estimate, verify before sale', maxL:Math.max(2000, L*4) });
@@ -548,13 +622,13 @@ td{font-variant-numeric:tabular-nums}
   }
 
   function decide(res){
-    if (res.verdict === 'rush') return reveal(RUSH.checks, function(){ showNo(RUSH.reasons, RUSH.ev, RUSH.note); });
+    if (res.verdict === 'rush') return reveal(RUSH.checks, function(){ showNo(RUSH.reasons, RUSH.ev, RUSH.note, RUSH); });
     if (res.verdict === 'concert') return reveal(CONCERT.checks, function(){ showYes(CONCERT); });
     if (res.verdict === 'yes') return reveal(res.product.checks, function(){ showYes(res.product); });
     if (res.verdict === 'no'){
       var ev = '';
       if (res.p != null && res.p >= 0.2 && res.L > 0) ev = 'Fair premium at a ' + pct(res.p) + ' chance: ' + res.p.toFixed(2) + ' × ' + money(res.L) + ' = ' + money(res.p*res.L) + ', before any costs.';
-      var after = function(){ showNo(res.reasons, ev, 'Declining risks like this protects everyone else in the pool.'); };
+      var after = function(){ showNo(res.reasons, ev, 'Declining risks like this protects everyone else in the pool.', res); };
       if (res.checks) return reveal(res.checks, after);
       $('checkFoot').hidden = true; return after();
     }
@@ -568,10 +642,34 @@ td{font-variant-numeric:tabular-nums}
     api_error:'The AI service returned an error.',
     error:'The AI underwriter could not be reached.'
   };
-  function showNo(reasons, ev, note){
+  // What each test means, shown by the optional "Explain why in detail" button.
+  var TEST_WHY = [
+    'Insurance can only pay back money you would actually lose. Without a loss, a payout is a prize, not compensation.',
+    'We only cover events that can make you worse off. If the same event could also make you money, it is speculation, like a bet.',
+    'If you can cause or prevent the event, being insured changes behaviour (moral hazard) and honest customers pay for it.',
+    'Premium ≈ chance × payout. Above a 20% chance, a fair premium costs almost as much as the loss itself.'
+  ];
+  function showNo(reasons, ev, note, info){
+    info = info || {};
     fill($('noReasons'), reasons);
     $('noEv').textContent = ev || ''; $('noEv').hidden = !ev;
     $('noNote').textContent = note || '';
+    $('whyLead').textContent = info.detail || reasons.join(' ');
+    var ul = $('whyTests'); ul.innerHTML = '';
+    TESTS.forEach(function(t, i){
+      var c = (info.checks || [])[i], li = document.createElement('li');
+      li.className = c ? (c[0] ? 'pass' : 'fail') : '';
+      li.innerHTML = '<span class="ic"></span><div><b></b><p></p><p></p></div>';
+      li.querySelector('.ic').textContent = c ? (c[0] ? '✓' : '✗') : '·';
+      li.querySelector('b').textContent = t[0];
+      var ps = li.querySelectorAll('p');
+      ps[0].textContent = TEST_WHY[i];
+      if (c){ ps[1].innerHTML = '<em>Your request:</em> '; ps[1].appendChild(document.createTextNode(c[1])); } else ps[1].remove();
+      ul.appendChild(li);
+    });
+    $('whyFix').textContent = info.fix ? 'What could work instead: ' + info.fix : '';
+    $('whyFix').hidden = !info.fix;
+    toggle('whyBtn', 'whyPanel', false);
     show(['viewCheck','viewNo']);
     $('viewNo').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
   }
@@ -591,19 +689,34 @@ td{font-variant-numeric:tabular-nums}
     show(['viewWarn']);
   }
 
+  function toggle(btnId, panelId, open){
+    var b = $(btnId), panel = $(panelId);
+    if (open == null) open = panel.hidden;
+    panel.hidden = !open; b.setAttribute('aria-expanded', String(open));
+    if (b.dataset.closed == null) b.dataset.closed = b.textContent;
+    b.textContent = open ? 'Hide details' : b.dataset.closed;
+  }
+  $('whyBtn').addEventListener('click', function(){ toggle('whyBtn', 'whyPanel'); });
+  $('probBtn').addEventListener('click', function(){ toggle('probBtn', 'probPanel'); });
+
   // ---------- Quote form ----------
   function showYes(P){
     product = P;
     $('yesTitle').textContent = P.title; $('yesBody').textContent = P.blurb;
     var badge = $('yesBadge');
     badge.className = 'badge ' + (P.source === 'data' ? 'data' : 'ai');
-    badge.textContent = P.source === 'data' ? 'Priced from HKO data, 2000–2025' : P.source === 'ai' ? 'AI estimate. Verify the probability with data before sale.' : 'Built-in product. Illustrative probability.';
+    badge.textContent = P.source === 'data' ? 'Priced from HKO data, 2000–2025' : P.source === 'ai' ? (P.pType === 'data' ? 'AI estimate citing public data. Check the source before sale.' : P.pType === 'proxy' ? 'AI estimate from related data. Verify before sale.' : 'AI estimate built on assumptions, not data. Verify before sale.') : 'Built-in product. Illustrative probability.';
     $('lEvent').textContent = P.labels.item; $('lVenue').textContent = P.labels.where; $('lDate').textContent = P.labels.date; $('lCost').textContent = P.labels.cost;
     $('hDate').textContent = P.hints.date; $('hCost').textContent = P.hints.cost || '';
     $('fEvent').value = P.item; $('fVenue').value = P.where; $('fDate').value = P.date; $('fCost').value = P.L; $('fCost').max = P.maxL;
     $('qPrem').textContent = money(P.premium); $('qDed').textContent = money(P.d); $('qCo').textContent = Math.round(P.c*100) + '%'; $('qLim').textContent = money(P.limit);
     $('qIf').textContent = P.kind === 'concert' ? 'If the show is cancelled or postponed' : 'If the trigger happens';
-    $('qProb').textContent = 'Chance per policy: ' + pct(P.p) + '. Expected loss: HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '.';
+    $('qProb').textContent = 'Chance per policy (' + P.period + '): ' + pct(P.p) + '. Expected loss: HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '.';
+    $('probType').className = 'badge ' + (P.pType === 'data' ? 'data' : 'ai');
+    $('probType').textContent = P.pTypeText;
+    fill($('probSteps'), P.pSteps);
+    $('probRange').textContent = P.pRange ? 'Plausible range: ' + pct(P.pRange[0]) + ' to ' + pct(P.pRange[1]) + ' (' + P.pRangeWhy + ').' + (P.kind === 'concert' ? ' Our R sensitivity test shows HK$25 stays safe up to 1% other causes; at 2%, 28% of years lose money.' : ' The pool simulation on the policy page draws the chance from this range.') : '';
+    toggle('probBtn', 'probPanel', false);
     show(['viewCheck','viewYes']); updateQuote();
     $('viewYes').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
   }
@@ -653,7 +766,7 @@ td{font-variant-numeric:tabular-nums}
     $('pBasis').textContent = P.basis;
     $('pSig').textContent = P.source === 'ai' ? 'Terms drafted by the Insulation V AI underwriter' : 'Issued automatically by the Insulation V underwriting engine';
     $('simBtn').textContent = P.kind === 'concert' ? 'Simulate: organiser postpones the show' : 'Simulate: the trigger happens';
-    $('payoutBox').hidden = true; $('simBtn').disabled = false;
+    $('payoutBox').hidden = true; $('simBox').hidden = true; $('simBtn').disabled = false;
     lastQuote = q;
     show(['viewPolicy']);
   });
@@ -670,7 +783,91 @@ td{font-variant-numeric:tabular-nums}
     });
     $('payoutBox').hidden = false; $('simBtn').disabled = true;
     $('payoutBox').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});
+    runPool(product);
   });
+
+  // ---------- Pool simulation: Monte Carlo in the browser, drawn with Plotly ----------
+  // Concert cover mirrors 03_code/02_portfolio_simulator.R; other products use independent policies.
+  var PLOTLY_SRC = 'https://cdn.jsdelivr.net/npm/plotly.js-basic-dist-min@2.35.2/plotly-basic.min.js', plotlyP = null;
+  var RUNS = 10000, SEED = 20261017;
+  function loadPlotly(){
+    if (window.Plotly) return Promise.resolve(window.Plotly);
+    if (!plotlyP) plotlyP = new Promise(function(ok, bad){
+      var sc = document.createElement('script'); sc.src = PLOTLY_SRC; sc.async = true;
+      sc.onload = function(){ ok(window.Plotly); }; sc.onerror = function(){ plotlyP = null; bad(); };
+      document.head.appendChild(sc);
+    });
+    return plotlyP;
+  }
+  function rng(seed){ return function(){ seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function poisson(lam, u){ var lim = Math.exp(-lam), k = 0, q = u(); while (q > lim){ k++; q *= u(); } return k; }
+  function binom(n, p, u){ var k = 0; for (var i = 0; i < n; i++) if (u() < p) k++; return k; }
+
+  function simulate(P){
+    var u = rng(SEED), pay = payoutOf(P, P.L), claims = new Array(RUNS), S = {pay:pay};
+    if (P.kind === 'concert'){
+      var C = 175, T = 100, lam = 47/26, perEve = C/365, pOther = 0.01;
+      for (var i = 0; i < RUNS; i++){
+        var hit = poisson(poisson(lam, u) * perEve, u), other = binom(C, pOther, u);
+        claims[i] = Math.min(hit + other, C) * T * pay;
+      }
+      S.unit = 'year'; S.policies = C * T;
+      S.model = 'Storm nights per year ~ Poisson(λ = 1.81, HKO 2000–2025); concerts hit ~ Poisson(nights × 175/365); other cancellations ~ Binomial(175, 1%). Each cancelled concert pays 100 insured tickets × ' + money(pay) + '. ' + num(RUNS) + ' simulated years, fixed seed.';
+    } else {
+      var N = 1000, rg = P.pType !== 'data' && P.pRange, lo = rg ? P.pRange[0] : P.p, hi = rg ? P.pRange[1] : P.p;
+      for (var j = 0; j < RUNS; j++) claims[j] = binom(N, lo + (hi - lo) * u(), u) * pay;
+      S.unit = 'policy period'; S.policies = N; S.uncertain = !!rg;
+      S.model = 'Claims ~ Binomial(n = 1,000 policies, p' + (rg ? '' : ' = ' + pct(P.p)) + ')' + (rg ? ', where p is uncertain so each run first draws p ~ Uniform(' + pct(lo) + ', ' + pct(hi) + ')' : '') + '. Each claim pays ' + money(pay) + '. ' + num(RUNS) + ' simulated policy periods, fixed seed.';
+    }
+    S.income = P.premium * S.policies;
+    var sorted = claims.slice().sort(function(a,b){ return a - b; }), sum = 0, losing = 0;
+    claims.forEach(function(c){ sum += c; if (c > S.income) losing++; });
+    S.mean = sum / RUNS; S.pLose = losing / RUNS; S.var995 = sorted[Math.floor(0.995 * RUNS)] - S.income;
+    var counts = {}; claims.forEach(function(c){ counts[c] = (counts[c] || 0) + 1; });
+    S.x = Object.keys(counts).map(Number).sort(function(a,b){ return a - b; });
+    S.y = S.x.map(function(x){ return counts[x]; });
+    return S;
+  }
+
+  function runPool(P){
+    var box = $('simBox'), unit = P.kind === 'concert' ? 'year' : 'policy period';
+    box.hidden = false;
+    $('simLead').textContent = 'Your payout is one claim in a pool. We replayed the pool ' + num(RUNS) + ' times to see how often premiums cover the claims.';
+    $('simModel').textContent = 'Simulating…'; $('simStats').innerHTML = ''; $('simNote').textContent = ''; $('simChart').innerHTML = '';
+    setTimeout(function(){
+      var S = simulate(P);
+      $('simModel').textContent = 'Model: ' + S.model;
+      $('simStats').innerHTML = '';
+      [['Premium income', money(S.income)], ['Average claims', money(S.mean)], ['Losing ' + S.unit + 's', pct(S.pLose)], ['Capital, 1-in-200', money(Math.max(S.var995, 0))]].forEach(function(r){
+        var d = document.createElement('div'); d.innerHTML = '<span></span><b></b>';
+        d.querySelector('span').textContent = r[0]; d.querySelector('b').textContent = r[1]; $('simStats').appendChild(d);
+      });
+      $('simChart').setAttribute('aria-label', 'Histogram of total claims across ' + num(RUNS) + ' simulated ' + unit + 's; ' + pct(S.pLose) + ' exceed premium income of ' + money(S.income) + '.');
+      loadPlotly().then(function(Plotly){ draw(Plotly, S, unit); }, function(){
+        $('simChart').hidden = true;
+        $('simNote').textContent = 'The chart needs an internet connection. The numbers above come from the same simulation.';
+      });
+    }, 30);
+  }
+
+  function draw(Plotly, S, unit){
+    var css = getComputedStyle(document.documentElement), v = function(n){ return css.getPropertyValue(n).trim(); };
+    var el = $('simChart'); el.hidden = false; el.innerHTML = '';
+    Plotly.react(el, [{
+      type:'bar', x:S.x, y:S.y,
+      marker:{color:S.x.map(function(x){ return x > S.income ? v('--no') : v('--brand'); })},
+      hovertemplate:'%{y:,} ' + unit + 's with claims of HK$%{x:,.0f}<extra></extra>'
+    }], {
+      margin:{l:56, r:12, t:12, b:48}, height:300, bargap:0.08, showlegend:false,
+      paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+      font:{family:'Poppins, system-ui, sans-serif', size:12, color:v('--ink')},
+      xaxis:{title:{text:'Total claims in one ' + unit + ' (HK$)'}, tickprefix:'HK$', separatethousands:true, gridcolor:v('--line'), zeroline:false},
+      yaxis:{title:{text:'Simulated ' + unit + 's'}, gridcolor:v('--line'), zeroline:false, separatethousands:true},
+      shapes:[{type:'line', x0:S.income, x1:S.income, yref:'paper', y0:0, y1:1, line:{color:v('--ink'), width:2, dash:'dot'}}],
+      annotations:[{x:S.income, yref:'paper', y:1, xanchor:'left', yanchor:'top', showarrow:false, text:' Premium income', font:{color:v('--ink')}}]
+    }, {displayModeBar:false, responsive:true});
+    $('simNote').textContent = 'Red bars are ' + unit + 's where claims exceed premium income (' + pct(S.pLose) + ' of runs). Capital, 1-in-200 = the 99.5th percentile of claims minus premium income.' + (S.uncertain ? ' The chance is uncertain, so the pool loses more often than the single estimate suggests: a reason to collect real data before selling.' : '');
+  }
 
   // ---------- Submit ----------
   $('askForm').addEventListener('submit', function(e){
