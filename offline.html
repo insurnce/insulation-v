@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Insulation V</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@600;800&family=Poppins:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#ffffff; --surface:#f5f0ea; --surface-2:#ece4da; --ink:#1c1612; --muted:#6b5e52; --line:#e2d8cc;
+  --brand:#5e3a16; --brand-ink:#ffffff; --brand-soft:#efe3d4;
+  --no:#b3261e; --no-bg:#fcebea; --no-line:#f1c3bf;
+  --yes:#1e7a46; --yes-bg:#e6f4ec; --yes-line:#b9e0c9;
+  --warn:#9a5700; --warn-bg:#fff2de; --warn-line:#f1d3a4;
+  --doc:#fffdfa; --shadow:0 1px 2px rgba(60,35,10,.06),0 8px 28px rgba(60,35,10,.08);
+  --display:"League Spartan","Arial Black",system-ui,sans-serif;
+  --body:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#16110d; --surface:#211a14; --surface-2:#2b2219; --ink:#f2ebe3; --muted:#b5a698; --line:#3a2f25;
+    --brand:#d9a86c; --brand-ink:#1b1209; --brand-soft:#33261a;
+    --no:#ff8a80; --no-bg:#3a1714; --no-line:#6a2a24;
+    --yes:#7bd8a2; --yes-bg:#12301f; --yes-line:#245a3b;
+    --warn:#ffc36b; --warn-bg:#3a2a12; --warn-line:#6b4d1f;
+    --doc:#1d1712; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#16110d; --surface:#211a14; --surface-2:#2b2219; --ink:#f2ebe3; --muted:#b5a698; --line:#3a2f25;
+  --brand:#d9a86c; --brand-ink:#1b1209; --brand-soft:#33261a;
+  --no:#ff8a80; --no-bg:#3a1714; --no-line:#6a2a24;
+  --yes:#7bd8a2; --yes-bg:#12301f; --yes-line:#245a3b;
+  --warn:#ffc36b; --warn-bg:#3a2a12; --warn-line:#6b4d1f;
+  --doc:#1d1712; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.steps li em{font-style:normal}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;margin:0;padding-inline:16px}
+.wrap{max-width:820px;margin-inline:auto;padding-block:20px 48px;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+p{margin:0}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:6px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:40px;height:40px;border-radius:10px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:24px;padding-top:3px}
+.brand b{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.01em;color:var(--brand);display:block;line-height:1}
+.brand small{color:var(--muted);font-size:13px}
+.top-actions{display:flex;gap:8px;align-items:center}
+.tag{font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted)}
+
+/* stepper */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;list-style:none;margin:0;padding:0}
+.steps li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);padding:8px 10px;border-radius:10px;background:var(--surface)}
+.steps li span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;border:1.5px solid currentColor;flex:none}
+.steps li.on{color:var(--brand);background:var(--brand-soft);font-weight:600}
+.steps li.done{color:var(--ink)}
+.steps li.done span{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* buttons */
+.btn{border:0;border-radius:12px;padding:13px 20px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn-primary{background:var(--brand);color:var(--brand-ink)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand)}
+.btn-sm{padding:8px 14px;font-size:14px;border-radius:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* request */
+.hero{display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:600}
+.hero h1{font-size:clamp(32px,6vw,48px);font-weight:800}
+.hero p{color:var(--muted);max-width:60ch}
+.ask{display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+.ask label{font-weight:600}
+textarea{width:100%;min-height:110px;resize:vertical;border:1.5px solid var(--line);border-radius:12px;padding:14px;background:var(--paper);font-size:18px;line-height:1.45}
+textarea:focus{border-color:var(--brand);outline:none}
+.examples{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.examples > span{font-size:13px;color:var(--muted)}
+.chip{border:1.5px dashed var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.ask-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ask-row small{color:var(--muted);font-size:13px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.how div{border-top:2px solid var(--brand);padding-top:10px}
+.how b{display:block;font-family:var(--display);font-size:18px;color:var(--brand)}
+.how p{font-size:14px;color:var(--muted)}
+
+/* underwriting */
+.check-card{border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.check-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);flex-wrap:wrap}
+.check-head h2{font-size:22px}
+.quote{font-style:italic;color:var(--muted);font-size:15px}
+.checks{list-style:none;margin:0;padding:0}
+.checks li{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:14px 18px;border-top:1px solid var(--line);opacity:.35;transition:opacity .25s}
+.checks li.shown{opacity:1}
+.checks .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--surface-2);color:var(--muted)}
+.checks li.pass .ic{background:var(--yes-bg);color:var(--yes)}
+.checks li.fail .ic{background:var(--no-bg);color:var(--no)}
+.checks b{display:block}
+.checks p{color:var(--muted);font-size:14px}
+.spin{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* verdicts */
+.verdict{border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;border:1.5px solid}
+.verdict h2{font-size:clamp(28px,5vw,40px);font-weight:800}
+.verdict.no{background:var(--no-bg);border-color:var(--no-line)}
+.verdict.no h2{color:var(--no)}
+.verdict.yes{background:var(--yes-bg);border-color:var(--yes-line)}
+.verdict.yes h2{color:var(--yes)}
+.verdict.warn{background:var(--warn-bg);border-color:var(--warn-line)}
+.verdict.warn h2{color:var(--warn)}
+.stamp{display:inline-flex;align-self:flex-start;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;border:1.5px solid currentColor;border-radius:6px;padding:3px 8px}
+.verdict.no .stamp{color:var(--no)} .verdict.yes .stamp{color:var(--yes)} .verdict.warn .stamp{color:var(--warn)}
+.verdict ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.ev{background:var(--paper);border-radius:12px;padding:14px 16px;border:1px solid var(--line);font-size:15px}
+.ev code{font-family:var(--mono);font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* form */
+.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start}
+.form{display:flex;flex-direction:column;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:13px;font-weight:600}
+.field small{font-size:12px;color:var(--muted)}
+.field input{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper);width:100%}
+.field input:focus{border-color:var(--brand);outline:none}
+.money{position:relative}
+.money span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+.money input{padding-left:44px;font-variant-numeric:tabular-nums}
+.qcard{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.qcard h3{font-size:18px}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:14px;border-bottom:1px dashed var(--line);padding-bottom:6px;font-variant-numeric:tabular-nums}
+.kv:last-of-type{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.big{display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:var(--brand-soft);border-radius:10px;padding:10px 12px}
+.big b{font-family:var(--display);font-size:28px;color:var(--brand);font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--muted)}
+.err{color:var(--no);font-size:13px}
+
+/* policy document */
+.doc{position:relative;background:var(--doc);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);padding:32px clamp(18px,4vw,40px);overflow:hidden;display:flex;flex-direction:column;gap:20px}
+.doc::after{content:"SPECIMEN";position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) rotate(-24deg);font-family:var(--display);font-weight:800;font-size:clamp(64px,16vw,150px);letter-spacing:.08em;color:var(--no);opacity:.08;pointer-events:none;white-space:nowrap}
+.doc-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--brand);padding-bottom:14px}
+.doc-head h2{font-size:28px;color:var(--brand)}
+.doc-head p{color:var(--muted);font-size:13px}
+.polno{font-family:var(--mono);font-size:13px;text-align:right}
+.polno b{display:block;font-size:15px}
+.spec-banner{background:var(--no-bg);color:var(--no);border:1px solid var(--no-line);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;text-align:center}
+.doc h3{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-bottom:8px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{width:38%;color:var(--muted);font-weight:500}
+td{font-variant-numeric:tabular-nums}
+.formula{font-family:var(--mono);background:var(--surface);border-radius:8px;padding:12px 14px;font-size:14px;overflow-x:auto;white-space:nowrap}
+.doc ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.doc section p{font-size:14px}
+.sig{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px;font-size:12px;color:var(--muted)}
+.payout{border:1.5px solid var(--yes-line);background:var(--yes-bg);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.payout b.amt{font-family:var(--display);font-size:34px;color:var(--yes)}
+.payout .tl{font-family:var(--mono);font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.foot{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+@media (max-width:640px){
+  .how,.grid2{grid-template-columns:1fr}
+  .steps li{font-size:12px;padding:6px}
+  .steps li em{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  .spin{animation:none}
+  .checks li{transition:none}
+}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:999px;padding:4px 10px;border:1px solid var(--line);background:var(--paper);color:var(--muted);align-self:flex-start}
+.badge.data{color:var(--yes);border-color:var(--yes-line)}
+.badge.ai{color:var(--warn);border-color:var(--warn-line)}
+.check-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);flex-wrap:wrap}
+.check-foot .live{display:flex;align-items:center;gap:8px}
+.verdict ul.reasons{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.examples .chip.alt{border-style:solid;border-color:var(--line);color:var(--muted)}
+.meta{font-size:12px;color:var(--muted)}
+
+/* optional explanations */
+.linkbtn{background:none;border:0;padding:0;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;align-self:flex-start}
+.why{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.why ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.why-tests{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.why-tests li{display:grid;grid-template-columns:26px 1fr;gap:10px}
+.why-tests .ic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+.why-tests li.pass .ic{background:var(--yes-bg);color:var(--yes)}
+.why-tests li.fail .ic{background:var(--no-bg);color:var(--no)}
+.why-tests b{display:block}
+.why-tests p,.why .muted{color:var(--muted)}
+.why-tests p em{font-style:normal;color:var(--ink)}
+
+/* pool simulation */
+.sim{border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.sim h3{font-size:18px}
+.sim-model{font-family:var(--mono);font-size:13px;background:var(--surface);border-radius:8px;padding:10px 12px;line-height:1.5}
+.sim-chart{width:100%;height:300px}
+.sim-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sim-stats div{background:var(--surface);border-radius:10px;padding:8px 10px}
+.sim-stats span{display:block;font-size:12px;color:var(--muted)}
+.sim-stats b{font-variant-numeric:tabular-nums}
+@media (max-width:640px){ .sim-stats{grid-template-columns:repeat(2,1fr)} }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">V</div>
+      <div><b>Insulation V</b><small>Micro-risk cover, priced from public data</small></div>
+    </div>
+    <div class="top-actions">
+      <span class="tag" id="engineTag">Demo build</span>
+      <button class="btn btn-ghost btn-sm" id="resetTop" type="button">Start over</button>
+    </div>
+  </header>
+
+  <ol class="steps" aria-label="Progress">
+    <li id="st1" class="on"><span>1</span>Request<em>&nbsp;cover</em></li>
+    <li id="st2"><span>2</span>Underwrite</li>
+    <li id="st3"><span>3</span>Policy</li>
+  </ol>
+
+  <!-- STEP 1: request -->
+  <section id="viewAsk" class="hero" aria-labelledby="askTitle">
+    <p class="eyebrow">Micro-risk cover</p>
+    <h1 id="askTitle">What are you worried about?</h1>
+    <p>Describe any small, everyday risk in your own words. Our underwriter checks whether it can be insured, designs a parametric policy and prices it.</p>
+    <form class="ask" id="askForm" novalidate>
+      <label for="riskText">Your risk</label>
+      <textarea id="riskText" placeholder="e.g. my flight to Tokyo gets delayed, my phone screen cracks, rain cancels my outdoor wedding"></textarea>
+      <div class="examples">
+        <span>Try:</span>
+        <button type="button" class="chip" data-fill="cannot get concert tickets">cannot get concert tickets</button>
+        <button type="button" class="chip" data-fill="have concert tickets but concert postponed">have concert tickets but concert postponed</button>
+        <button type="button" class="chip alt" data-fill="my flight to Tokyo gets delayed">my flight to Tokyo gets delayed</button>
+        <button type="button" class="chip alt" data-fill="I want to win the Mark Six">I want to win the Mark Six</button>
+      </div>
+      <div class="ask-row">
+        <small id="askHint">Concert requests answer in about 3 seconds. Other risks go to the AI underwriter.</small>
+        <button class="btn btn-primary" id="askBtn" type="submit">Check my risk <span aria-hidden="true">&rarr;</span></button>
+      </div>
+    </form>
+    <div class="how" aria-label="How it works">
+      <div><b>Underwrite</b><p>Four insurability tests. Declines risks that are too likely or that you control.</p></div>
+      <div><b>Price</b><p>Premium = expected loss &times; (1 + loading). Concert cover uses 26 years of HKO data.</p></div>
+      <div><b>Pay</b><p>An objective, public trigger releases the payout. No claim form.</p></div>
+    </div>
+  </section>
+
+  <!-- STEP 2: underwriting -->
+  <section id="viewCheck" hidden aria-live="polite">
+    <div class="check-card">
+      <div class="check-head">
+        <h2>Insurability check</h2>
+        <p class="quote" id="echo"></p>
+      </div>
+      <ul class="checks" id="checkList"></ul>
+      <div class="check-foot" id="checkFoot">
+        <span class="live"><span class="spin" aria-hidden="true"></span><span id="checkStatus">Checking&hellip;</span></span>
+        <button class="btn btn-ghost btn-sm" id="stopBtn" type="button">Stop</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="viewNo" hidden>
+    <div class="verdict no" role="status">
+      <span class="stamp">Declined</span>
+      <h2>This risk cannot be insured.</h2>
+      <ul class="reasons" id="noReasons"></ul>
+      <div class="ev" id="noEv"></div>
+      <p class="note" id="noNote"></p>
+      <div class="why" id="whyPanel" hidden>
+        <p id="whyLead"></p>
+        <ul class="why-tests" id="whyTests"></ul>
+        <p id="whyFix"></p>
+        <p class="muted">Scope: Insulation V only covers small, sudden money losses of HK$100–20,000 with an objective trigger. Life, funeral, serious medical and large losses belong with a licensed insurer.</p>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost" type="button" id="whyBtn" aria-expanded="false" aria-controls="whyPanel">Explain why in detail</button>
+        <button class="btn btn-ghost" type="button" data-reset>Try another request</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="viewWarn" hidden>
+    <div class="verdict warn" role="status">
+      <span class="stamp" id="warnStamp">Not yet available</span>
+      <h2 id="warnTitle">We don't cover this yet.</h2>
+      <p id="warnBody"></p>
+      <div class="row"><button class="btn btn-ghost" type="button" data-reset>Try another request</button></div>
+    </div>
+  </section>
+
+  <section id="viewYes" hidden>
+    <div class="verdict yes">
+      <span class="stamp">Insurable risk</span>
+      <h2 id="yesTitle">Good news. We can cover this.</h2>
+      <p id="yesBody"></p>
+      <span class="badge" id="yesBadge"></span>
+      <div class="grid2">
+        <form class="form" id="tripForm" novalidate>
+          <div class="field"><label for="fName">Policyholder</label><input id="fName" value="Chris Wong" autocomplete="off"></div>
+          <div class="field"><label for="fEvent" id="lEvent">Concert</label><input id="fEvent" autocomplete="off"></div>
+          <div class="field"><label for="fVenue" id="lVenue">Venue</label><input id="fVenue" autocomplete="off"></div>
+          <div class="field"><label for="fDate" id="lDate">Concert date</label><input id="fDate" type="date"><small id="hDate"></small></div>
+          <div class="field"><label for="fCost" id="lCost">Amount at risk</label>
+            <div class="money"><span>HK$</span><input id="fCost" type="number" inputmode="numeric" min="0" step="10"></div>
+            <small id="hCost"></small></div>
+          <p class="err" id="formErr" hidden></p>
+        </form>
+        <div class="qcard" aria-live="polite">
+          <h3>Your quote</h3>
+          <div class="kv"><span>Premium</span><span id="qPrem"></span></div>
+          <div class="kv"><span>Deductible</span><span id="qDed"></span></div>
+          <div class="kv"><span>Co-payment</span><span id="qCo"></span></div>
+          <div class="kv"><span>Payout limit</span><span id="qLim"></span></div>
+          <div class="big"><span id="qIf">If it happens</span><b id="qPay"></b></div>
+          <p class="note" id="qWork"></p>
+          <p class="meta" id="qProb"></p>
+          <button class="linkbtn" type="button" id="probBtn" aria-expanded="false" aria-controls="probPanel">How did we get this chance?</button>
+          <div class="why" id="probPanel" hidden>
+            <span class="badge" id="probType"></span>
+            <ol id="probSteps"></ol>
+            <p class="muted" id="probRange"></p>
+          </div>
+          <button class="btn btn-primary" id="buyBtn" type="button">Get my policy <span aria-hidden="true">&rarr;</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3: policy -->
+  <section id="viewPolicy" hidden>
+    <article class="doc" aria-label="Specimen policy document">
+      <div class="doc-head">
+        <div>
+          <h2 id="pTitle">Concert Trip Cover</h2>
+          <p>Insulation V &middot; Parametric micro-insurance policy schedule</p>
+        </div>
+        <div class="polno">Policy number<b id="pNo"></b><span id="pIssued"></span></div>
+      </div>
+      <p class="spec-banner">SPECIMEN, for demonstration only. Not a contract of insurance.</p>
+
+      <section>
+        <h3>Schedule</h3>
+        <div class="table-wrap"><table>
+          <tr><th>Policyholder</th><td id="pName"></td></tr>
+          <tr><th>Insured event</th><td id="pEvent"></td></tr>
+          <tr><th id="pWhereLabel">Venue and date</th><td id="pWhere"></td></tr>
+          <tr><th>Amount at risk declared</th><td id="pCost"></td></tr>
+          <tr><th>Premium paid</th><td id="pPrem"></td></tr>
+          <tr><th>Deductible / co-payment</th><td id="pDed"></td></tr>
+          <tr><th>Payout limit</th><td id="pLim"></td></tr>
+          <tr><th>Payout if triggered</th><td><b id="pPay"></b></td></tr>
+        </table></div>
+      </section>
+
+      <section>
+        <h3>Trigger</h3>
+        <p id="pTrigger"></p>
+      </section>
+
+      <section>
+        <h3>Payout rule</h3>
+        <div class="formula" id="pFormula"></div>
+        <p class="note" id="pWork" style="margin-top:6px"></p>
+      </section>
+
+      <section>
+        <h3>Not covered</h3>
+        <ul id="pExcl"></ul>
+      </section>
+
+      <section>
+        <h3>Pricing basis</h3>
+        <p id="pBasis"></p>
+      </section>
+
+      <div class="sig"><span id="pSig">Issued automatically by the Insulation V underwriting engine</span><span>CUHK OSALP 2025-04 &middot; Team Insulation V</span></div>
+    </article>
+
+    <div class="payout" id="payoutBox" hidden role="status">
+      <span class="stamp" style="color:var(--yes)">Payout sent</span>
+      <b class="amt" id="payAmt"></b>
+      <p id="payText"></p>
+      <div class="tl" id="payTl"></div>
+    </div>
+
+    <section class="sim" id="simBox" hidden aria-labelledby="simTitle">
+      <h3 id="simTitle">The pool behind your payout</h3>
+      <p class="note" id="simLead"></p>
+      <p class="sim-model" id="simModel"></p>
+      <div class="sim-chart" id="simChart" role="img"></div>
+      <div class="sim-stats" id="simStats"></div>
+      <p class="note" id="simNote"></p>
+    </section>
+
+    <div class="row" style="margin-top:16px">
+      <button class="btn btn-primary" id="simBtn" type="button">Simulate: the trigger happens</button>
+      <button class="btn btn-ghost" type="button" data-reset>Start over</button>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Demonstration build for the CUHK OSALP 2025-04 capstone showcase.</span>
+    <span>Specimen only. Not a real insurance offer. AI underwriter built with Llama.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var views = ['viewAsk','viewCheck','viewNo','viewWarn','viewYes','viewPolicy'];
+  var timers = [], ctl = null, product = null, lastQuote = null, sampleFn = null, runId = 0;
+
+  // ===== Paste your Cloudflare Worker link between the quotes (see SETUP.md). =====
+  var WORKER_URL = '';   // offline copy: built-in products only
+  // Live AI underwriter through our free Cloudflare Worker (an open-source Llama model, no API key in this page).
+  // aiState: 'on' | 'none' (no Worker link set: built-in products only)
+  var hasServer = /^https:\/\//.test(WORKER_URL);
+  var aiState = hasServer ? 'on' : 'none', samplePromise = Promise.resolve(null);
+  function callServer(text){
+    var ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 30000);
+    return fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:text}), signal:ctrl.signal })
+      .then(function(res){ return res.json().catch(function(){ return {ok:false, code:'error'}; }); },
+            function(){ return {ok:false, code:'error'}; })
+      .then(function(r){ clearTimeout(timer); if (r && r.ok) return r.result; throw {code:(r && r.code) || 'error'}; });
+  }
+  if (hasServer) sampleFn = { server:true };
+  setAi(aiState);
+  function setAi(state){
+    aiState = state;
+    $('engineTag').textContent = state === 'on' ? 'AI underwriter on' : 'Built-in products only';
+  }
+
+  function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+  function show(ids){ views.forEach(function(v){ $(v).hidden = ids.indexOf(v) === -1; }); window.scrollTo({top:0,behavior:reduce?'auto':'smooth'}); }
+  function step(n){ ['st1','st2','st3'].forEach(function(id,i){ $(id).className = (i+1===n) ? 'on' : (i+1<n ? 'done' : ''); }); }
+  function money(x){ return 'HK$' + Math.round(x).toLocaleString('en-US'); }
+  function num(x){ return Math.round(x).toLocaleString('en-US'); }
+  function pct(p){ var v = p*100; return (v < 1 ? v.toFixed(2) : v < 10 ? v.toFixed(1) : v.toFixed(0)) + '%'; }
+  function clamp(x,a,b){ x = Number(x); if (!isFinite(x)) x = a; return Math.min(Math.max(x,a),b); }
+  function isoIn(days){ var d = new Date(Date.now()+days*864e5); return d.toISOString().slice(0,10); }
+  function fmtDate(iso){ if (!iso) return ''; var p = iso.split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }
+  function payoutOf(P, L){ return Math.min(Math.max(L - P.d, 0) * (1 - P.c), P.limit); }
+  function priceOf(P){ var el = P.p * payoutOf(P, P.L); return Math.max(10, Math.round(el*2/5)*5); }
+  function fill(ul, items){ ul.innerHTML = ''; items.forEach(function(t){ var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }); }
+
+  var TESTS = [['Insurable interest','Do you lose money?'],['Pure risk','Only a loss, never a gain?'],['Outside your control','Is it accidental?'],['Low probability','Is the premium affordable?']];
+
+  // ---------- Stage products (fixed answers) ----------
+  var CONCERT = {
+    kind:'concert', source:'data', name:'Concert Trip Cover',
+    title:'Good news. We can cover this trip.',
+    blurb:"If the show is cancelled, the organiser refunds your ticket; if it is postponed, your ticket moves to the new date. Either way, nobody pays back the train, hotel and booking fees for the original date. We do.",
+    L:1200, d:150, c:0.2, limit:960, p:0.0149, premium:25, maxL:5000,
+    checks:[[true,'Yes. Train, hotel and fees are already paid.'],[true,'Yes. A cancellation or postponement can only cost you money.'],[true,'Yes. Typhoon, illness or stage failure.'],[true,'Yes. About 1.49% per concert (HKO data plus 1% other causes).']],
+    item:'The Midnight Echoes, Live in Hong Kong', where:'Kai Tak Stadium', date:'2026-11-14',
+    labels:{item:'Concert', where:'Venue', date:'Concert date', cost:'Non-refundable trip costs', whereDate:'Venue and date'},
+    hints:{date:'Sales close 72 hours before the show.', cost:'Train, hotel and booking fees. Not the ticket itself.'},
+    cutoff72:true, lossWord:'trip costs',
+    trigger:'We pay when the organiser publishes an official notice that the concert is cancelled or postponed from its original date, for any reason outside your control: Typhoon Signal No. 8 or above, Black Rainstorm, performer illness, or a stage or technical failure. You do not need to file a claim.',
+    exclusions:['The ticket price, which the organiser refunds or moves to the new date.','Deciding not to attend when the show goes ahead.','Cancellations or postponements announced before this policy was bought. Sales close 72 hours before the show.','Losing a ticket rush or failing to buy a ticket.'],
+    basis:'Chance a concert is cancelled or postponed: 0.495% weather (47 concert evenings under Signal 8+ or Black Rain, HKO 2000–2025) + 1% other causes (assumption) = 1.49%. Expected loss 1.49% × HK$840 = HK$12.56. Premium HK$25 includes loading for costs and capital.',
+    period:'one concert', pType:'data', pTypeText:'Weather part from HKO data; other causes are an assumption',
+    pSteps:['HKO warning records 2000–2025: 47 concert evenings (17:00–23:00) had Typhoon Signal 8+ or Black Rain in force.',
+      '47 ÷ (26 years × 365.25 evenings) = 0.495% weather chance per concert.',
+      'Other causes (performer illness, stage failure): 1%. This is an assumption from documented cases (Andy Lau 2018, Sammi Cheng 2026); no complete public count exists.',
+      '0.495% + 1% = 1.49% per concert.'],
+    pRange:[0.00995, 0.02495], pRangeWhy:'other causes between 0.5% and 2%',
+    story:function(q){ return { text:'The organiser postponed “' + q.f.item + '” after Typhoon Signal No. 8 was issued. The ticket moves to the new date, but the trip booked for tonight is wasted. ' + money(q.y) + ' is on its way to ' + q.first + '. No form, no adjuster.', steps:['Typhoon Signal No. 8 issued (HKO)','Organiser posts official postponement notice'] }; }
+  };
+  var RUSH = {
+    reasons:["You don't own a ticket yet, so there is no financial loss to cover.",'Missing out in a sold-out sale is almost certain, so a fair premium would cost almost as much as the ticket.'],
+    ev:'Fair premium if the chance of loss is 90%: 0.9 × HK$840 = HK$756, before any costs. Nobody would pay that to protect a HK$1,200 trip.',
+    note:'Declining protects everyone else in the pool. Covering the ticket rush would invite scalping.',
+    detail:'Insurance pays back money you have already put at risk. Before the sale you have paid nothing, so there is nothing to pay back. And in a sold-out rush most fans miss out, so the "accident" is the normal outcome: the fair premium would be almost the price of the trip.',
+    fix:'Once you hold a ticket and have booked travel, the cancellation or postponement of the show is insurable: try "have concert tickets but concert postponed".',
+    checks:[[false,"No. You haven't paid for a ticket yet."],[false,'No. A resold ticket could even make a profit.'],[false,'Partly. You choose to join the sale.'],[false,'No. Missing out on a sold-out sale is almost certain.']]
+  };
+  var DEMO = {'cannot get concert tickets':'rush',"can't get concert tickets":'rush','have concert tickets but concert cancelled':'concert','have concert ticket but concert cancelled':'concert','have concert tickets but concert postponed':'concert','have concert ticket but concert postponed':'concert'};
+
+  // ---------- Built-in products, used when the AI underwriter is unavailable ----------
+  function generic(o){
+    var P = { kind:'generic', source:o.source||'preset', name:o.name, title:'Good news. We can cover this.', blurb:o.blurb,
+      L:o.L, d:o.d, c:0.2, p:o.p, maxL:o.maxL||Math.max(2000,o.L*4),
+      checks:o.checks, item:o.item, where:o.where||'Hong Kong', date:isoIn(7),
+      labels:{item:'What is covered', where:'Where', date:'Cover starts', cost:'Amount at risk', whereDate:'Where and when'},
+      hints:{date:'Cover runs for one policy period from this date.', cost:o.costHint}, cutoff72:false, lossWord:'amount at risk',
+      trigger:o.trigger, exclusions:o.exclusions, pBasis:o.pBasis, triggerShort:o.triggerShort,
+      period:o.period || 'one policy period', pType:o.pType || 'assumption', pTypeText:o.pTypeText,
+      pSteps:(o.pSteps && o.pSteps.length) ? o.pSteps : ['No dataset in this demo: ' + pct(o.p) + ' is an illustrative assumption.', 'To verify: ' + o.pBasis.replace(/^illustrative assumption; /,'') + '.'],
+      pRange:o.pRange || [o.p/2, Math.min(o.p*2, 0.2)], pRangeWhy:o.pRangeWhy || 'half to double the assumption' };
+    if (!P.pTypeText) P.pTypeText = P.pType === 'data' ? 'Based on public data' : P.pType === 'proxy' ? 'Based on related (proxy) data' : 'Assumption, no direct data';
+    P.limit = o.limit || Math.round((o.L - o.d) * 0.8 / 10) * 10;
+    P.premium = priceOf(P);
+    P.basis = 'Chance the trigger happens: ' + pct(P.p) + ' per policy, ' + P.period + ' (' + P.pBasis + '). How: ' + P.pSteps.join(' ') + ' Expected loss ' + pct(P.p) + ' × ' + money(payoutOf(P,P.L)) + ' = HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '. Premium = expected loss × (1 + 100% loading), rounded to HK$5, minimum HK$10.';
+    P.story = function(q){ return { text:'Trigger confirmed: ' + P.triggerShort + '. ' + money(q.y) + ' is on its way to ' + q.first + '. No form, no adjuster.', steps:[cap(P.triggerShort),'Record checked against the official source'] }; };
+    return P;
+  }
+  function cap(s){ s = String(s||''); return s.charAt(0).toUpperCase() + s.slice(1); }
+  var OK4 = function(a,b,c,d){ return [[true,a],[true,b],[true,c],[true,d]]; };
+  var PRESETS = [
+    { test:/flight|plane|航班|飛機/, make:function(){ return generic({ name:'Flight Delay Cover', item:'Delay of my flight', blurb:'We cover the extra meals, transport and rebooking costs when your flight arrives very late.', L:800, d:100, p:0.05,
+      checks:OK4('Yes. Delays cost you meals, transport or a missed booking.','Yes. A delay can only cost you money.','Yes. Weather, air traffic and airline faults.','Yes. Around 5% of flights run 3+ hours late (illustrative).'),
+      costHint:'Extra meals, transport and rebooking you would pay.', trigger:'We pay when the airline or airport record shows your flight arrived 3 hours or more after its scheduled time.', triggerShort:'the airport record shows a 3-hour delay',
+      exclusions:['Delays announced before you bought this policy.','Missing the flight yourself.','Strikes announced in advance.'], pBasis:'illustrative assumption; check against Airport Authority delay statistics' }); } },
+    { test:/baggage|luggage|suitcase|行李/, make:function(){ return generic({ name:'Delayed Baggage Cover', item:'Delay of my checked baggage', blurb:'We cover the essentials you have to buy while your bag is missing.', L:1000, d:100, p:0.01,
+      checks:OK4('Yes. You must buy essentials while your bag is missing.','Yes. A delay can only cost you money.','Yes. Airline handling errors.','Yes. About 1% of bags are delayed (illustrative).'),
+      costHint:'Essentials you would buy while waiting.', trigger:'We pay when the airline issues a property irregularity report showing your bag arrived 12 hours or more late.', triggerShort:'the airline confirms a 12-hour baggage delay',
+      exclusions:['Carry-on items.','Delays on your return journey home.','Items with no airline report.'], pBasis:'illustrative assumption; check against airline mishandled-baggage rates' }); } },
+    { test:/phone|screen|iphone|手機|屏幕|爆mon/, make:function(){ return generic({ name:'Phone Screen Cover', item:'Accidental screen crack', blurb:'We cover part of a screen repair after an accident. The deductible keeps small claims away.', L:1500, d:300, p:0.08,
+      checks:OK4('Yes. A repair costs you money.','Yes. A crack can only cost you money.','Mostly. The deductible and co-payment limit careless use.','Yes. About 8% of phones need a screen repair each year (illustrative).'),
+      costHint:'Screen repair price at an approved shop.', trigger:'We pay when an approved repair shop issues an invoice for a cracked screen on the insured phone.', triggerShort:'an approved shop invoices a screen repair',
+      exclusions:['Cracks that existed before cover started.','Deliberate damage.','Loss or theft of the phone.'], pBasis:'illustrative assumption; check against repair-shop claim data' }); } },
+    { test:/rain|typhoon|weather|wedding|picnic|hike|outdoor|下雨|颱風|暴雨/, make:function(){ return generic({ name:'Rain-out Cover', item:'Rain-out of my outdoor event', blurb:'We cover non-refundable deposits when official weather warnings wreck an outdoor plan.', L:2000, d:200, p:0.02,
+      checks:OK4('Yes. Deposits and bookings are already paid.','Yes. Bad weather can only cost you money.','Yes. The weather is outside your control.','Yes. About 2% for one evening (illustrative, from HKO warning history).'),
+      costHint:'Non-refundable deposits and bookings.', trigger:'We pay when the Hong Kong Observatory has an Amber Rainstorm or higher, or Typhoon Signal No. 3 or higher, in force during the event hours.', triggerShort:'HKO rainstorm warning in force during the event',
+      exclusions:['Warnings already in force when you bought cover.','Choosing to cancel without a warning.','Events outside Hong Kong.'], pBasis:'illustrative assumption; check against HKO warning database' }); } }
+  ];
+  var DECLINES = [
+    { test:/lottery|mark six|六合彩|bet|gambl|casino|賭|stock|shares|crypto|bitcoin|股票|幣/, reasons:['This is speculation: you can win as well as lose, so it is not a pure risk.','The outcome depends on choices you make, which invites moral hazard.'],
+      detail:'A bet or an investment is a risk you take on purpose, hoping to gain. If we paid you when you lose, you would keep the wins and pass the losses to the pool, so everyone would bet more. The house edge also means losing is the expected outcome, not an accident.',
+      fix:'Nothing makes a bet insurable. A sudden loss you did not choose, such as a cracked phone screen or a delayed flight, can be.',
+      checks:[[false,'Partly. You only risk money you choose to stake.'],[false,'No. You could win as well as lose.'],[false,'No. You decide to bet or invest.'],[false,'No. Losing is the most likely outcome.']] },
+    { test:/exam|dse|grade|考試|fail my/, reasons:['The result depends largely on your own effort, so it is not outside your control.','There is no fixed money loss to measure.'],
+      detail:'Your result depends mostly on how you prepare, so cover would weaken the reason to study (moral hazard). There is also no public, objective money loss we could pay against.',
+      fix:'A non-refundable exam fee lost to an official exam cancellation (e.g. HKEAA cancels a paper for a typhoon) would be insurable.',
+      checks:[[false,'No. There is no fixed money loss.'],[true,'Yes. Failing can only cost you.'],[false,'No. It depends on your own effort.'],[false,'Cannot be priced while you control it.']] },
+    { test:/already|yesterday|last week|已經|琴日/, reasons:['The loss has already happened. Insurance only covers uncertain future events.'],
+      detail:'Insurance shares the cost of uncertain future events across a pool. A loss that has already happened has a 100% chance, so the fair premium equals the loss itself; covering it would just move the cost to other customers.',
+      fix:'Cover the next time instead: buy before the risky event, while the outcome is still uncertain.',
+      checks:[[true,'Yes. Money was lost.'],[true,'Yes. It was only a loss.'],[true,'Yes. It was an accident.'],[false,'No. It already happened, so the chance is 100%.']] }
+  ];
+  function rushLike(t){ return /can'?t get|cannot get|can not get|couldn'?t get|fail to get|fight for|ticket rush|sold out|sell out|buy tickets?|get (a )?tickets?|miss out|搶飛|搶票|買唔到|抢票|買不到/.test(t) && !/have (a |concert )?tickets?|already (bought|have)|got my ticket|有飛|已買/.test(t); }
+  function concertCancel(t){ return /concert|show|gig|演唱會|騷/.test(t) && /cancel|postpone|reschedul|called off|new date|typhoon|rainstorm|black rain|signal 8|取消|延期|改期|颱風|暴雨/.test(t); }
+
+  function offline(t){
+    if (rushLike(t)) return {verdict:'rush'};
+    if (concertCancel(t)) return {verdict:'concert'};
+    for (var i=0;i<DECLINES.length;i++) if (DECLINES[i].test.test(t)) return {verdict:'no', reasons:DECLINES[i].reasons, checks:DECLINES[i].checks, detail:DECLINES[i].detail, fix:DECLINES[i].fix};
+    for (var j=0;j<PRESETS.length;j++) if (PRESETS[j].test.test(t)) return {verdict:'yes', product:PRESETS[j].make()};
+    return {verdict:'unknown'};
+  }
+
+  // ---------- AI underwriter ----------
+  // The underwriting prompt lives on the server (Code.gs), so the page can't be used as a free chatbot.
+  function fromAI(r, text){
+    if (!r || typeof r !== 'object' || !Array.isArray(r.checks)) throw {code:'bad_shape'};
+    var checks = TESTS.map(function(_, i){ var c = r.checks[i] || {}; return [!!c.pass, String(c.reason || (c.pass ? 'Passes.' : 'Fails.'))]; });
+    var p = r.probability == null ? null : clamp(r.probability, 0, 1);
+    if (!r.insurable || (p != null && p >= 0.2)){
+      var reasons = (Array.isArray(r.decline_reasons) ? r.decline_reasons : []).map(String).filter(Boolean).slice(0,3);
+      if (p != null && p >= 0.2 && r.insurable) reasons.push('The chance of loss is about ' + pct(p) + ', too high to price affordably.');
+      if (!reasons.length) reasons = ['It does not pass the insurability tests above.'];
+      return {verdict:'no', reasons:reasons, checks:checks, p:p, L:Number(r.amount_at_risk_hkd)||0,
+        detail:String(r.decline_detail||''), fix:String(r.what_would_change||'')};
+    }
+    var L = clamp(r.amount_at_risk_hkd, 100, 20000);
+    var pp = (p==null?0.02:Math.max(p,0.001)), rg = Array.isArray(r.probability_range) ? r.probability_range.map(Number) : [];
+    var pRange = (rg.length === 2 && isFinite(rg[0]) && isFinite(rg[1])) ? [clamp(Math.min(rg[0],pp),0.0005,1), clamp(Math.max(rg[1],pp),0,1)] : null;
+    var pSteps = (Array.isArray(r.probability_steps) ? r.probability_steps : []).map(String).filter(Boolean).slice(0,5);
+    if (!pSteps.length) pSteps = [String(r.probability_basis || 'The AI gave no working for this estimate.')];
+    var pType = /^(data|proxy|assumption)$/.test(r.probability_source_type) ? r.probability_source_type : 'assumption';
+    if (pType !== 'assumption' && /^\s*assum/i.test(pSteps[0])) pType = 'assumption';   // a guess is never labelled as data
+    var P = generic({ source:'ai', name:String(r.product_name||'Micro-risk Cover').slice(0,60), item:String(r.covered_item||text).slice(0,120),
+      blurb:String(r.summary||''), L:L, d:clamp(r.deductible_hkd, 0, L*0.5), p:pp, checks:checks,
+      period:String(r.policy_period||'one policy period').slice(0,40), pType:pType, pRange:pRange, pRangeWhy:String(r.probability_range_why||'AI range'),
+      pSteps:pSteps,
+      costHint:String(r.amount_help||''), trigger:String(r.trigger||'We pay when an official record confirms the insured event.'),
+      triggerShort:String(r.trigger_short||'the insured event is confirmed'), exclusions:(Array.isArray(r.exclusions)?r.exclusions:[]).map(String).slice(0,4),
+      pBasis:String(r.probability_basis||'AI estimate').replace(/\.$/,'') + '; AI estimate, verify before sale', maxL:Math.max(2000, L*4) });
+    if (!P.exclusions.length) P.exclusions = ['Events that started before cover began.','Deliberate or self-caused losses.'];
+    return {verdict:'yes', product:P};
+  }
+
+  // ---------- Underwriting screen ----------
+  function buildRows(){
+    var list = $('checkList'); list.innerHTML = '';
+    TESTS.forEach(function(t){
+      var li = document.createElement('li');
+      li.innerHTML = '<div class="ic"><div class="spin" aria-hidden="true"></div></div><div><b></b><p></p></div>';
+      li.querySelector('b').textContent = t[0] + ': ' + t[1];
+      li.querySelector('p').textContent = 'Checking…';
+      list.appendChild(li);
+    });
+  }
+  function reveal(checks, done){
+    var list = $('checkList'), gap = reduce ? 0 : 550;
+    $('checkStatus').textContent = 'Running the four tests…'; $('stopBtn').hidden = true;
+    checks.forEach(function(c, i){
+      timers.push(setTimeout(function(){
+        var li = list.children[i];
+        li.classList.add('shown', c[0] ? 'pass' : 'fail');
+        li.querySelector('.ic').textContent = c[0] ? '✓' : '✗';
+        li.querySelector('p').textContent = c[1];
+      }, gap*(i+1)));
+    });
+    timers.push(setTimeout(function(){ $('checkFoot').hidden = true; done(); }, gap*(checks.length+1)));
+  }
+  function startCheck(text){
+    clearTimers(); step(2);
+    $('echo').textContent = '“' + text.trim() + '”';
+    buildRows(); $('checkFoot').hidden = false; $('stopBtn').hidden = true;
+    $('checkStatus').textContent = 'Reading your request…';
+    show(['viewCheck']);
+  }
+
+  function decide(res){
+    if (res.verdict === 'rush') return reveal(RUSH.checks, function(){ showNo(RUSH.reasons, RUSH.ev, RUSH.note, RUSH); });
+    if (res.verdict === 'concert') return reveal(CONCERT.checks, function(){ showYes(CONCERT); });
+    if (res.verdict === 'yes') return reveal(res.product.checks, function(){ showYes(res.product); });
+    if (res.verdict === 'no'){
+      var ev = '';
+      if (res.p != null && res.p >= 0.2 && res.L > 0) ev = 'Fair premium at a ' + pct(res.p) + ' chance: ' + res.p.toFixed(2) + ' × ' + money(res.L) + ' = ' + money(res.p*res.L) + ', before any costs.';
+      var after = function(){ showNo(res.reasons, ev, 'Declining risks like this protects everyone else in the pool.', res); };
+      if (res.checks) return reveal(res.checks, after);
+      $('checkFoot').hidden = true; return after();
+    }
+    warn(res.verdict);
+  }
+
+  var lastCode = '', SERVER_MSG = {
+    slow_down:'Too many requests from this device. Wait ten minutes and try again.',
+    daily_limit:"Today's free AI allowance is used up. It resets at 8am Hong Kong time.",
+    no_key:'The AI server is not set up yet.',
+    api_error:'The AI service returned an error.',
+    error:'The AI underwriter could not be reached.'
+  };
+  // What each test means, shown by the optional "Explain why in detail" button.
+  var TEST_WHY = [
+    'Insurance can only pay back money you would actually lose. Without a loss, a payout is a prize, not compensation.',
+    'We only cover events that can make you worse off. If the same event could also make you money, it is speculation, like a bet.',
+    'If you can cause or prevent the event, being insured changes behaviour (moral hazard) and honest customers pay for it.',
+    'Premium ≈ chance × payout. Above a 20% chance, a fair premium costs almost as much as the loss itself.'
+  ];
+  function showNo(reasons, ev, note, info){
+    info = info || {};
+    fill($('noReasons'), reasons);
+    $('noEv').textContent = ev || ''; $('noEv').hidden = !ev;
+    $('noNote').textContent = note || '';
+    $('whyLead').textContent = info.detail || reasons.join(' ');
+    var ul = $('whyTests'); ul.innerHTML = '';
+    TESTS.forEach(function(t, i){
+      var c = (info.checks || [])[i], li = document.createElement('li');
+      li.className = c ? (c[0] ? 'pass' : 'fail') : '';
+      li.innerHTML = '<span class="ic"></span><div><b></b><p></p><p></p></div>';
+      li.querySelector('.ic').textContent = c ? (c[0] ? '✓' : '✗') : '·';
+      li.querySelector('b').textContent = t[0];
+      var ps = li.querySelectorAll('p');
+      ps[0].textContent = TEST_WHY[i];
+      if (c){ ps[1].innerHTML = '<em>Your request:</em> '; ps[1].appendChild(document.createTextNode(c[1])); } else ps[1].remove();
+      ul.appendChild(li);
+    });
+    var fix = /^\s*(nothing|none|n\/a)\b/i.test(info.fix || '') ? '' : info.fix;
+    $('whyFix').textContent = fix ? 'What could work instead: ' + fix : '';
+    $('whyFix').hidden = !fix;
+    toggle('whyBtn', 'whyPanel', false);
+    show(['viewCheck','viewNo']);
+    $('viewNo').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+  }
+  function warn(kind){
+    $('checkFoot').hidden = true;
+    if (kind === 'error'){
+      $('warnStamp').textContent = 'Underwriter unavailable';
+      $('warnTitle').textContent = "The AI underwriter couldn't answer this time.";
+      $('warnBody').textContent = (SERVER_MSG[lastCode] || 'Check your connection and try again, or tap one of the examples.') + ' Built-in products still work: concerts, flights, baggage, phone screens and rain-outs.';
+    } else {
+      $('warnStamp').textContent = 'Needs more detail';
+      $('warnTitle').textContent = "We couldn't match this to a product.";
+      var why = aiState === 'none' ? 'This is the offline copy, so the AI underwriter is off.'
+        : (SERVER_MSG[lastCode] || 'The AI underwriter is not available right now.');
+      $('warnBody').textContent = why + ' Built-in products still work: concerts, flights, baggage, phone screens and rain-outs.';
+    }
+    show(['viewWarn']);
+  }
+
+  function toggle(btnId, panelId, open){
+    var b = $(btnId), panel = $(panelId);
+    if (open == null) open = panel.hidden;
+    panel.hidden = !open; b.setAttribute('aria-expanded', String(open));
+    if (b.dataset.closed == null) b.dataset.closed = b.textContent;
+    b.textContent = open ? 'Hide details' : b.dataset.closed;
+  }
+  $('whyBtn').addEventListener('click', function(){ toggle('whyBtn', 'whyPanel'); });
+  $('probBtn').addEventListener('click', function(){ toggle('probBtn', 'probPanel'); });
+
+  // ---------- Quote form ----------
+  function showYes(P){
+    product = P;
+    $('yesTitle').textContent = P.title; $('yesBody').textContent = P.blurb;
+    var badge = $('yesBadge');
+    badge.className = 'badge ' + (P.source === 'data' ? 'data' : 'ai');
+    badge.textContent = P.source === 'data' ? 'Priced from HKO data, 2000–2025' : P.source === 'ai' ? (P.pType === 'data' ? 'AI estimate citing public data. Check the source before sale.' : P.pType === 'proxy' ? 'AI estimate from related data. Verify before sale.' : 'AI estimate built on assumptions, not data. Verify before sale.') : 'Built-in product. Illustrative probability.';
+    $('lEvent').textContent = P.labels.item; $('lVenue').textContent = P.labels.where; $('lDate').textContent = P.labels.date; $('lCost').textContent = P.labels.cost;
+    $('hDate').textContent = P.hints.date; $('hCost').textContent = P.hints.cost || '';
+    $('fEvent').value = P.item; $('fVenue').value = P.where; $('fDate').value = P.date; $('fCost').value = P.L; $('fCost').max = P.maxL;
+    $('qPrem').textContent = money(P.premium); $('qDed').textContent = money(P.d); $('qCo').textContent = Math.round(P.c*100) + '%'; $('qLim').textContent = money(P.limit);
+    $('qIf').textContent = P.kind === 'concert' ? 'If the show is cancelled or postponed' : 'If the trigger happens';
+    $('qProb').textContent = 'Chance per policy (' + P.period + '): ' + pct(P.p) + '. Expected loss: HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '.';
+    $('probType').className = 'badge ' + (P.pType === 'data' ? 'data' : 'ai');
+    $('probType').textContent = P.pTypeText;
+    fill($('probSteps'), P.pSteps);
+    $('probRange').textContent = P.pRange ? 'Plausible range: ' + pct(P.pRange[0]) + ' to ' + pct(P.pRange[1]) + ' (' + P.pRangeWhy + ').' + (P.kind === 'concert' ? ' Our R sensitivity test shows HK$25 stays safe up to 1% other causes; at 2%, 28% of years lose money.' : ' The pool simulation on the policy page draws the chance from this range.') : '';
+    toggle('probBtn', 'probPanel', false);
+    show(['viewCheck','viewYes']); updateQuote();
+    $('viewYes').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+  }
+  function readForm(){ var L = parseFloat($('fCost').value); return { name:$('fName').value.trim(), item:$('fEvent').value.trim(), where:$('fVenue').value.trim(), date:$('fDate').value, L:isFinite(L)?L:NaN }; }
+  function updateQuote(){
+    if (!product) return null;
+    var P = product, f = readForm(), err = '';
+    if (!isFinite(f.L) || f.L < 0) err = 'Enter the amount at risk in HK$.';
+    else if (f.L > P.maxL) err = P.name + ' protects up to ' + money(P.maxL) + '.';
+    if (!f.item) err = err || 'Say what is covered.';
+    if (f.date){
+      var p = f.date.split('-'), at = new Date(+p[0], +p[1]-1, +p[2], 20, 0), lead = at - Date.now();
+      if (P.cutoff72 && lead < 72*3600e3) err = err || 'Sales close 72 hours before the show. Pick a later concert.';
+      if (!P.cutoff72 && lead < -864e5) err = err || 'Cover must start today or later.';
+    }
+    var L = isFinite(f.L) ? clamp(f.L, 0, P.maxL) : 0, y = payoutOf(P, L);
+    $('qPay').textContent = money(y);
+    $('qWork').textContent = L <= P.d ? 'Below the ' + money(P.d) + ' deductible, so nothing would be paid.'
+      : (y >= P.limit ? 'Capped at the ' + money(P.limit) + ' limit.' : '(' + num(L) + ' − ' + num(P.d) + ') × ' + Math.round((1-P.c)*100) + '% = ' + num(y));
+    $('formErr').textContent = err; $('formErr').hidden = !err;
+    $('buyBtn').disabled = !!err || !f.name;
+    return {f:f, L:L, y:y, err:err, first:(f.name.split(' ')[0] || 'you')};
+  }
+  ['fCost','fDate','fName','fEvent'].forEach(function(id){ $(id).addEventListener('input', updateQuote); });
+
+  // ---------- Policy ----------
+  $('buyBtn').addEventListener('click', function(){
+    var q = updateQuote(); if (!q || q.err) return;
+    var P = product, now = new Date();
+    step(3);
+    $('pTitle').textContent = P.name;
+    $('pNo').textContent = (P.kind === 'concert' ? 'IV-CTC-2026-' : 'IV-' + P.name.replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase() + '-2026-') + String(100000 + Math.floor(Math.random()*900000)).slice(1);
+    $('pIssued').textContent = 'Issued ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + ' ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    $('pName').textContent = q.f.name;
+    $('pEvent').textContent = P.kind === 'concert' ? 'Cancellation or postponement of “' + q.f.item + '”' : q.f.item;
+    $('pWhereLabel').textContent = P.labels.whereDate;
+    $('pWhere').textContent = (q.f.where ? q.f.where + ', ' : '') + (P.kind === 'concert' ? '' : 'from ') + fmtDate(q.f.date);
+    $('pCost').textContent = money(q.L) + (P.kind === 'concert' ? ' (train, hotel, booking fees)' : '');
+    $('pPrem').textContent = money(P.premium);
+    $('pDed').textContent = money(P.d) + ' / ' + Math.round(P.c*100) + '%';
+    $('pLim').textContent = money(P.limit);
+    $('pPay').textContent = money(q.y);
+    $('pTrigger').textContent = P.trigger;
+    $('pFormula').textContent = 'Y = min{ max(L − ' + num(P.d) + ', 0) × ' + (1-P.c).toFixed(1) + ' , ' + num(P.limit) + ' }';
+    $('pWork').textContent = 'Worked example for this policy: L = ' + num(q.L) + ', so Y = ' + num(q.y) + '.';
+    fill($('pExcl'), P.exclusions);
+    $('pBasis').textContent = P.basis;
+    $('pSig').textContent = P.source === 'ai' ? 'Terms drafted by the Insulation V AI underwriter' : 'Issued automatically by the Insulation V underwriting engine';
+    $('simBtn').textContent = P.kind === 'concert' ? 'Simulate: organiser postpones the show' : 'Simulate: the trigger happens';
+    $('payoutBox').hidden = true; $('simBox').hidden = true; $('simBtn').disabled = false;
+    lastQuote = q;
+    show(['viewPolicy']);
+  });
+
+  $('simBtn').addEventListener('click', function(){
+    if (!lastQuote || !product) return;
+    var q = lastQuote, t = new Date(), s = product.story(q);
+    var hh = function(d){ return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); };
+    $('payAmt').textContent = money(q.y);
+    $('payText').textContent = s.text;
+    $('payTl').innerHTML = '';
+    [[0,s.steps[0]],[1,s.steps[1]],[1,'Trigger confirmed on policy ' + $('pNo').textContent],[2,'Payout of ' + money(q.y) + ' released']].forEach(function(r){
+      var el = document.createElement('span'); el.textContent = hh(new Date(t.getTime()+r[0]*60000)) + '  ' + r[1]; $('payTl').appendChild(el);
+    });
+    $('payoutBox').hidden = false; $('simBtn').disabled = true;
+    $('payoutBox').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});
+    runPool(product);
+  });
+
+  // ---------- Pool simulation: Monte Carlo in the browser, drawn with Plotly ----------
+  // Concert cover mirrors 03_code/02_portfolio_simulator.R; other products use independent policies.
+  var PLOTLY_SRC = 'https://cdn.jsdelivr.net/npm/plotly.js-basic-dist-min@2.35.2/plotly-basic.min.js', plotlyP = null;
+  var RUNS = 10000, SEED = 20261017;
+  function loadPlotly(){
+    if (window.Plotly) return Promise.resolve(window.Plotly);
+    if (!plotlyP) plotlyP = new Promise(function(ok, bad){
+      var sc = document.createElement('script'); sc.src = PLOTLY_SRC; sc.async = true;
+      sc.onload = function(){ ok(window.Plotly); }; sc.onerror = function(){ plotlyP = null; bad(); };
+      document.head.appendChild(sc);
+    });
+    return plotlyP;
+  }
+  function rng(seed){ return function(){ seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function poisson(lam, u){ var lim = Math.exp(-lam), k = 0, q = u(); while (q > lim){ k++; q *= u(); } return k; }
+  function binom(n, p, u){ var k = 0; for (var i = 0; i < n; i++) if (u() < p) k++; return k; }
+
+  function simulate(P){
+    var u = rng(SEED), pay = payoutOf(P, P.L), claims = new Array(RUNS), S = {pay:pay};
+    if (P.kind === 'concert'){
+      var C = 175, T = 100, lam = 47/26, perEve = C/365, pOther = 0.01;
+      for (var i = 0; i < RUNS; i++){
+        var hit = poisson(poisson(lam, u) * perEve, u), other = binom(C, pOther, u);
+        claims[i] = Math.min(hit + other, C) * T * pay;
+      }
+      S.unit = 'year'; S.policies = C * T;
+      S.model = 'Storm nights per year ~ Poisson(λ = 1.81, HKO 2000–2025); concerts hit ~ Poisson(nights × 175/365); other cancellations ~ Binomial(175, 1%). Each cancelled concert pays 100 insured tickets × ' + money(pay) + '. ' + num(RUNS) + ' simulated years, fixed seed.';
+    } else {
+      var N = 1000, rg = P.pType !== 'data' && P.pRange, lo = rg ? P.pRange[0] : P.p, hi = rg ? P.pRange[1] : P.p;
+      for (var j = 0; j < RUNS; j++) claims[j] = binom(N, lo + (hi - lo) * u(), u) * pay;
+      S.unit = 'policy period'; S.policies = N; S.uncertain = !!rg;
+      S.model = 'Claims ~ Binomial(n = 1,000 policies, p' + (rg ? '' : ' = ' + pct(P.p)) + ')' + (rg ? ', where p is uncertain so each run first draws p ~ Uniform(' + pct(lo) + ', ' + pct(hi) + ')' : '') + '. Each claim pays ' + money(pay) + '. ' + num(RUNS) + ' simulated policy periods, fixed seed.';
+    }
+    S.income = P.premium * S.policies;
+    var sorted = claims.slice().sort(function(a,b){ return a - b; }), sum = 0, losing = 0;
+    claims.forEach(function(c){ sum += c; if (c > S.income) losing++; });
+    S.mean = sum / RUNS; S.pLose = losing / RUNS; S.var995 = sorted[Math.floor(0.995 * RUNS)] - S.income;
+    var counts = {}; claims.forEach(function(c){ counts[c] = (counts[c] || 0) + 1; });
+    S.x = Object.keys(counts).map(Number).sort(function(a,b){ return a - b; });
+    S.y = S.x.map(function(x){ return counts[x]; });
+    return S;
+  }
+
+  function runPool(P){
+    var box = $('simBox'), unit = P.kind === 'concert' ? 'year' : 'policy period';
+    box.hidden = false;
+    $('simLead').textContent = 'Your payout is one claim in a pool. We replayed the pool ' + num(RUNS) + ' times to see how often premiums cover the claims.';
+    $('simModel').textContent = 'Simulating…'; $('simStats').innerHTML = ''; $('simNote').textContent = ''; $('simChart').innerHTML = '';
+    setTimeout(function(){
+      var S = simulate(P);
+      $('simModel').textContent = 'Model: ' + S.model;
+      $('simStats').innerHTML = '';
+      [['Premium income', money(S.income)], ['Average claims', money(S.mean)], ['Losing ' + S.unit + 's', pct(S.pLose)], ['Capital, 1-in-200', money(Math.max(S.var995, 0))]].forEach(function(r){
+        var d = document.createElement('div'); d.innerHTML = '<span></span><b></b>';
+        d.querySelector('span').textContent = r[0]; d.querySelector('b').textContent = r[1]; $('simStats').appendChild(d);
+      });
+      $('simChart').setAttribute('aria-label', 'Histogram of total claims across ' + num(RUNS) + ' simulated ' + unit + 's; ' + pct(S.pLose) + ' exceed premium income of ' + money(S.income) + '.');
+      loadPlotly().then(function(Plotly){ draw(Plotly, S, unit); }, function(){
+        $('simChart').hidden = true;
+        $('simNote').textContent = 'The chart needs an internet connection. The numbers above come from the same simulation.';
+      });
+    }, 30);
+  }
+
+  function draw(Plotly, S, unit){
+    var css = getComputedStyle(document.documentElement), v = function(n){ return css.getPropertyValue(n).trim(); };
+    var el = $('simChart'); el.hidden = false; el.innerHTML = '';
+    Plotly.react(el, [{
+      type:'bar', x:S.x, y:S.y,
+      marker:{color:S.x.map(function(x){ return x > S.income ? v('--no') : v('--brand'); })},
+      hovertemplate:'%{y:,} ' + unit + 's with claims of HK$%{x:,.0f}<extra></extra>'
+    }], {
+      margin:{l:56, r:12, t:12, b:48}, height:300, bargap:0.08, showlegend:false,
+      paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+      font:{family:'Poppins, system-ui, sans-serif', size:12, color:v('--ink')},
+      xaxis:{title:{text:'Total claims in one ' + unit + ' (HK$)'}, tickprefix:'HK$', separatethousands:true, gridcolor:v('--line'), zeroline:false},
+      yaxis:{title:{text:'Simulated ' + unit + 's'}, gridcolor:v('--line'), zeroline:false, separatethousands:true},
+      shapes:[{type:'line', x0:S.income, x1:S.income, yref:'paper', y0:0, y1:1, line:{color:v('--ink'), width:2, dash:'dot'}}],
+      annotations:[{x:S.income, yref:'paper', y:1, xanchor:'left', yanchor:'top', showarrow:false, text:' Premium income', font:{color:v('--ink')}}]
+    }, {displayModeBar:false, responsive:true});
+    $('simNote').textContent = 'Red bars are ' + unit + 's where claims exceed premium income (' + pct(S.pLose) + ' of runs). Capital, 1-in-200 = the 99.5th percentile of claims minus premium income.' + (S.uncertain ? ' The chance is uncertain, so the pool loses more often than the single estimate suggests: a reason to collect real data before selling.' : '');
+  }
+
+  // ---------- Submit ----------
+  $('askForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var text = $('riskText').value, t = text.toLowerCase().replace(/\s+/g,' ').trim();
+    if (!t){ $('askHint').textContent = 'Type a risk first, or tap an example.'; $('riskText').focus(); return; }
+    var id = ++runId;
+    startCheck(text);
+    if (DEMO[t]) return decide({verdict:DEMO[t]});           // stage inputs: fixed answers
+    askAI(text, t, id);
+  });
+  function askAI(text, t, id){
+    if (!sampleFn){ var off = offline(t); return decide(off.verdict === 'unknown' ? {verdict:'unknown'} : off); }
+    lastCode = '';
+    $('checkStatus').textContent = 'AI underwriter is reading your request\u2026 (about 5\u201315 seconds)';
+    $('stopBtn').hidden = false;
+    callServer(text).then(function(r){
+      if (id !== runId) return;
+      var res; try { res = fromAI(r, text); } catch(_) { res = offline(t); if (res.verdict === 'unknown') res = {verdict:'error'}; }
+      decide(res);
+    }).catch(function(err){
+      if (id !== runId) return;
+      lastCode = (err && err.code) || 'error';
+      var res = offline(t);
+      decide(res.verdict === 'unknown' ? {verdict:'error'} : res);
+    });
+  }
+  $('stopBtn').addEventListener('click', function(){ runId++; reset(); });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-fill]'), function(b){
+    b.addEventListener('click', function(){ $('riskText').value = b.getAttribute('data-fill'); $('riskText').focus(); });
+  });
+  function reset(){
+    clearTimers(); runId++; if (ctl) { ctl.abort(); ctl = null; }
+    product = null; lastQuote = null;
+    $('riskText').value = ''; $('askHint').textContent = 'Concert requests answer in about 3 seconds. Other risks go to the AI underwriter.';
+    step(1); show(['viewAsk']);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-reset]'), function(b){ b.addEventListener('click', reset); });
+  $('resetTop').addEventListener('click', reset);
+})();
+</script>
+
+</body>
+</html>
