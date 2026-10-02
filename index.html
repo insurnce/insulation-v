@@ -469,7 +469,7 @@ td{font-variant-numeric:tabular-nums}
   // Live AI underwriter through our free Cloudflare Worker (an open-source Llama model, no API key in this page).
   var hasServer = /^https:\/\//.test(WORKER_URL);
   function callServer(text){
-    var ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 30000);
+    var ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 45000);
     return fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:text}), signal:ctrl.signal })
       .then(function(res){ return res.json().catch(function(){ return {ok:false, code:'error'}; }); },
             function(){ return {ok:false, code:'error'}; })
@@ -898,7 +898,8 @@ td{font-variant-numeric:tabular-nums}
     para(item('Decision'), '', decision);
     if (kind !== 'insurable' && info.consequence) para(item('If we covered it anyway'), '', info.consequence);
     if (kind === 'no_data' && info.dataNeeded) para(item('What data would let us price it'), '', info.dataNeeded);
-    var fix = /^\s*(nothing|none|n\/a)\b/i.test(info.fix || '') || /^[a-z_]+$/.test(String(info.fix || '').trim()) ? '' : info.fix;
+    // Drop empty, id-like, or declined-product suggestions (phone screens are above our 20% limit).
+    var fix = /^\s*(nothing|none|n\/a)\b/i.test(info.fix || '') || /^[a-z_]+$/.test(String(info.fix || '').trim()) || /screen/i.test(info.fix || '') ? '' : info.fix;
     if (kind !== 'insurable' && fix) para(item('What we can cover instead'), '', fix);
   }
 
@@ -1194,7 +1195,7 @@ td{font-variant-numeric:tabular-nums}
   function askAI(text, t, id){
     if (!hasServer){ var off = offline(t); return decide(off); }
     lastCode = '';
-    $('checkStatus').textContent = 'AI underwriter is reading your request… (about 5–15 seconds)';
+    $('checkStatus').textContent = 'AI underwriter is reading your request… (about 10–25 seconds)';
     $('stopBtn').hidden = false;
     callServer(text).then(function(r){
       if (id !== runId) return;
