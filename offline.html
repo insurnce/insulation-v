@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%235e3a16'/%3E%3Cpath d='M18 18h9l5 18 5-18h9L36 48h-8z' fill='%23fff'/%3E%3C/svg%3E">
 </head>
 <body>
 <title>Insulation V</title>
@@ -249,6 +250,8 @@ td{font-variant-numeric:tabular-nums}
 .bt-list li{break-inside:avoid;padding:2px 0}
 .roll-out .sum{margin-top:6px;color:var(--ink)}
 @media (max-width:640px){
+  #engineTag{display:none}
+  .tag{font-size:10px;letter-spacing:.08em}
   .sim-stats{grid-template-columns:repeat(2,1fr)}
   .bt-list{columns:1}
   .verdict,.sim{padding:16px 12px}
@@ -1491,26 +1494,44 @@ td{font-variant-numeric:tabular-nums}
   function askAI(text, t, id){
     if (!hasServer){ var off = offline(t); return decide(off); }
     lastCode = '';
-    $('checkStatus').textContent = 'AI underwriter is reading your request… (about 10–25 seconds)';
     $('stopBtn').hidden = false;
+    startProgress();
     callServer(text).then(function(r){
+      stopProgress();
       if (id !== runId) return;
       var res; try { res = fromAI(r, text); } catch(_) { res = offline(t); if (res.verdict === 'unknown') res = {verdict:'error'}; }
       decide(res);
     }).catch(function(err){
+      stopProgress();
       if (id !== runId) return;
       lastCode = (err && err.code) || 'error';
       var res = offline(t);
       decide(res.verdict === 'unknown' ? {verdict:'error'} : res);
     });
   }
+  // What the underwriter is doing, step by step, while the AI works (answers take 10-25 s; saved answers under 1 s).
+  var PROGRESS = [[0, 'Reading your request…'], [2.5, 'Test 1: would you lose money you own or have paid?'], [5, 'Tests 2 and 3: pure risk, and outside your control?'],
+    [7.5, 'Test 4: looking up published data (Police, HKO, C&SD, SITA)…'], [10, 'Test 5: is it within our scope?'], [12.5, 'Pricing from the data and writing the explanation…'],
+    [18, 'Almost there. The free AI model can take up to 25 seconds.'], [32, 'Still working. If this takes much longer, tap Stop and try again.']];
+  var progressTimer = null;
+  function startProgress(){
+    stopProgress();
+    var t0 = Date.now();
+    var tick = function(){
+      var secs = (Date.now() - t0) / 1000, msg = PROGRESS[0][1];
+      PROGRESS.forEach(function(p){ if (secs >= p[0]) msg = p[1]; });
+      $('checkStatus').textContent = msg + ' (' + Math.floor(secs) + ' s)';
+    };
+    tick(); progressTimer = setInterval(tick, 500);
+  }
+  function stopProgress(){ if (progressTimer){ clearInterval(progressTimer); progressTimer = null; } }
   $('stopBtn').addEventListener('click', function(){ runId++; reset(); });
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-fill]'), function(b){
     b.addEventListener('click', function(){ $('riskText').value = b.getAttribute('data-fill'); $('riskText').focus(); });
   });
   function reset(){
-    clearTimers(); runId++;
+    clearTimers(); stopProgress(); runId++;
     product = null; lastQuote = null; $('simBox').hidden = true;
     $('riskText').value = ''; $('askHint').textContent = 'Concert requests answer in about 3 seconds. Other risks go to the AI underwriter.';
     step(1); show(['viewAsk']);
