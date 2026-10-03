@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What We Changed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@600;800&family=Poppins:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#ffffff; --surface:#f5f0ea; --ink:#1c1612; --muted:#6b5e52; --line:#e2d8cc;
+  --brand:#5e3a16; --brand-soft:#efe3d4; --yes:#1e7a46; --yes-bg:#e6f4ec;
+  --display:"League Spartan","Arial Black",system-ui,sans-serif;
+  --body:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#16110d; --surface:#211a14; --ink:#f2ebe3; --muted:#b5a698; --line:#3a2f25;
+    --brand:#d9a86c; --brand-soft:#33261a; --yes:#7bd8a2; --yes-bg:#12301f;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#16110d; --surface:#211a14; --ink:#f2ebe3; --muted:#b5a698; --line:#3a2f25;
+  --brand:#d9a86c; --brand-soft:#33261a; --yes:#7bd8a2; --yes-bg:#12301f;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;margin:0;padding-inline:16px}
+.wrap{max-width:820px;margin-inline:auto;padding-block:24px 56px;display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,6vw,44px)}
+h2{font-size:22px;color:var(--brand)}
+p{margin:0}
+a{color:var(--brand)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+.top b{font-family:var(--display);font-size:22px;color:var(--brand)}
+.lead{color:var(--muted);max-width:62ch}
+.item{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.item header{background:var(--surface);padding:14px 18px}
+.item header span{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.item header p{font-weight:600}
+.item .body{padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.item ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.done{display:inline-block;font-size:12px;font-weight:600;color:var(--yes);background:var(--yes-bg);border-radius:999px;padding:2px 10px;align-self:flex-start}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--surface);font-weight:600}
+tr:last-child td{border-bottom:0}
+.foot{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <b>Insulation V</b>
+    <a href="https://insurnce.github.io/insulation-v/">&larr; Back to the website</a>
+  </header>
+
+  <section>
+    <h1>What we changed after feedback</h1>
+    <p class="lead">Our teacher tried several cases on the AI version of the site and gave four comments. This page shows each comment and what we did about it.</p>
+  </section>
+
+  <article class="item">
+    <header><span>Comment 1</span><p>Add an optional button that explains clearly why a risk cannot be insured.</p></header>
+    <div class="body">
+      <span class="done">Done</span>
+      <ul>
+        <li><b>Explain the decision step by step</b> on every result. It sets out what would be insured, then each test as <i>question → rule → why the rule exists → your request → result</i>, then the decision, what would go wrong if we covered it anyway, and what we can cover instead.</li>
+        <li>A fifth test, <b>within our scope</b>, so life, funeral and medical requests are declined for the right reason.</li>
+        <li>The decision line and the summary are generated from the five test results, so they can never contradict them.</li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="item">
+    <header><span>Comment 2</span><p>Some risks cannot be calculated from our own data (e.g. a lost wallet got a 1% chance). Make the AI explain its reasoning better.</p></header>
+    <div class="body">
+      <span class="done">Done</span>
+      <ul>
+        <li><b>No data, no price.</b> Every probability now comes from published data: Hong Kong Police, C&amp;SD, the Hong Kong Observatory and SITA. The AI may only choose a row from our data table; our code does every calculation, so the steps always add up.</li>
+        <li>If no data measures the event, the site says <b>"We can't price this risk yet"</b>, names the data it would need, and suggests something we can price. A lost wallet gets this answer; theft of a wallet is priced from Police data (0.15% a year).</li>
+        <li>A data-row check stops the AI stretching data to fit (theft data cannot price a lost item; baggage data cannot price a flight delay).</li>
+        <li><b>How did we get this chance?</b> shows the data, the rate and the conversion to your policy period on every quote.</li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="item">
+    <header><span>Comment 3</span><p>The site is most useful for filtering out risks that cannot be insured (e.g. funeral: outside micro-risk).</p></header>
+    <div class="body">
+      <span class="done">Kept and strengthened</span>
+      <ul>
+        <li>Common test cases (lost items, flight delays, phone screens, funeral and medical, gambling, exams, losses that already happened) have fixed, hand-checked answers with full reasoning.</li>
+        <li>Phone-screen cover is now declined from data: 31% × 67% = 20.8% of owners a year, above our 20% limit.</li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="item">
+    <header><span>Comment 4</span><p>The simulation has little feel. Add a short line on the distribution and parameters, and use a JavaScript chart library such as Plotly.</p></header>
+    <div class="body">
+      <span class="done">Done</span>
+      <ul>
+        <li><b>Run the simulation</b> button on every quote and policy, with a one-line model (e.g. storm nights ~ Poisson(λ = 1.81); other cancellations ~ Binomial(175, 1%)) and every parameter with its source.</li>
+        <li>Charts drawn with Plotly in the browser. Concert Trip Cover gives the same results as our R model: 6.4% losing years and HK$234,500 capital for a 1-in-200 year.</li>
+        <li><b>Roll the dice</b> once, 100 or 1,000 times, and watch premiums and payouts add up.</li>
+        <li><b>Sliders</b> for the other-cause rate, the number of concerts or policies, and "what if the real chance is higher".</li>
+        <li><b>Reality check</b>: what each product would have paid in every real year of its data, including the 47 named storm evenings from 2000 to 2025.</li>
+        <li><b>Seasonal pricing</b> for weather covers from HKO monthly records, and a <b>live HKO check</b> that pauses weather sales while a warning is in force.</li>
+      </ul>
+    </div>
+  </article>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2>Data we price from</h2>
+    <div class="table-wrap"><table>
+      <tr><th>Risk</th><th>Rate</th><th>Source</th></tr>
+      <tr><td>Concert cancelled (weather)</td><td>47 ÷ 9,497 = 0.495% per evening</td><td>HKO Warnings &amp; Signals Database, 2000–2025</td></tr>
+      <tr><td>Concert cancelled (other causes)</td><td>4 of about 522 large shows = 0.77%, rounded up to 1%</td><td>News reports Jan 2024–Sep 2026; HKSAR Government LCQ9 (18 Jun 2025)</td></tr>
+      <tr><td>Theft of personal property</td><td>10,920 ÷ 7,527,500 = 0.15% per person per year</td><td>HK Police, Police in Figures 2024–2025; C&amp;SD mid-2025 population</td></tr>
+      <tr><td>Home burglary</td><td>816 ÷ 2,775,300 = 0.029% per household per year</td><td>HK Police; C&amp;SD General Household Survey Q2 2025</td></tr>
+      <tr><td>Typhoon Signal 8+ on a day</td><td>76 ÷ 9,497 = 0.80% per day (priced by month)</td><td>HKO, 2000–2025</td></tr>
+      <tr><td>Black Rain or Signal 8+, daytime</td><td>61 ÷ 9,497 = 0.64% per day (priced by month)</td><td>HKO, 2000–2025</td></tr>
+      <tr><td>Delayed checked bag</td><td>6.3 ÷ 1,000 × 74% = 0.47% per flight</td><td>SITA Baggage IT Insights 2025 and 2026</td></tr>
+      <tr><td>Phone screen damage (declined)</td><td>31% × 67% = 20.8% per year</td><td>Allstate Protection Plans surveys 2023 (2,504 US adults)</td></tr>
+    </table></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2>Honest limitations</h2>
+    <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+      <li>The 1% other-cause rate for concerts is rounded up from 0.77% documented in news reports, which miss smaller cases. Our R sensitivity test shows HK$25 is safe up to 1% and loses money in 28% of years at 2%.</li>
+      <li>HKO records storms, not which concerts were on. The reality check uses the average number of concerts an evening (175 ÷ 365), with a stress view of 2 concerts on every storm evening.</li>
+      <li>Weather covers are lumpy: in some real years a typhoon cluster would have cost more than a year's premiums. That is why we would need capital and reinsurance.</li>
+      <li>Police figures only count reported cases. Our theft cover pays only against a police report, so the reported rate is the one that matters.</li>
+      <li>The phone-screen figure is US data; it is the only large published survey we found.</li>
+      <li>Pool sizes (175 concerts × 100 tickets; 1,000 policies) are sales assumptions, not data.</li>
+      <li>The AI underwriter can word one test awkwardly on unusual requests. Prices and verdicts are always decided by our code and data.</li>
+    </ul>
+  </section>
+
+  <p class="foot">Insulation V · CUHK OSALP 2025-04 capstone · Specimen only, not a real insurance offer.</p>
+</div>
+</body>
+</html>

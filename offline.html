@@ -191,6 +191,19 @@ td{font-variant-numeric:tabular-nums}
 .verdict ul.reasons{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
 .examples .chip.alt{border-style:solid;border-color:var(--line);color:var(--muted)}
 .meta{font-size:12px;color:var(--muted)}
+.top-actions{flex-wrap:wrap;justify-content:flex-end}
+.bd{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bd span{display:block;height:100%;background:var(--brand);border-radius:999px}
+#qLive.paused{color:var(--no);font-weight:600}
+/* motion */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rise{animation:rise .35s cubic-bezier(.2,.7,.2,1) both}
+.sim-stats,.sim-chart,.roll-out{transition:opacity .2s}
+.sim.busy .sim-stats,.sim.busy .sim-chart{opacity:.5}
+.btn,.chip,.linkbtn{transition:transform .08s ease,filter .15s,border-color .15s,color .15s,background-color .15s}
+.btn:active:not(:disabled),.chip:active{transform:scale(.97)}
+.bd span{transition:width .35s cubic-bezier(.2,.7,.2,1)}
+@media (prefers-reduced-motion: reduce){ .rise{animation:none} .bd span{transition:none} }
 
 /* optional explanations */
 .linkbtn{background:none;border:0;padding:0;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;align-self:flex-start}
@@ -227,8 +240,17 @@ td{font-variant-numeric:tabular-nums}
 .sim-stats b{font-variant-numeric:tabular-nums}
 .roll-out{font-family:var(--mono);font-size:13px;display:flex;flex-direction:column;gap:2px}
 .roll-out .hit{color:var(--yes);font-weight:600}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.slider{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;font-size:14px;background:var(--surface);border-radius:10px;padding:10px 12px}
+.slider input{grid-column:1/-1;width:100%;accent-color:var(--brand)}
+.slider b{font-variant-numeric:tabular-nums}
+.check{display:flex;gap:8px;align-items:center;font-size:14px}
+.bt-list{list-style:none!important;padding:0!important;margin:0;columns:2;column-gap:16px;font-size:13px;display:block!important}
+.bt-list li{break-inside:avoid;padding:2px 0}
+.roll-out .sum{margin-top:6px;color:var(--ink)}
 @media (max-width:640px){
   .sim-stats{grid-template-columns:repeat(2,1fr)}
+  .bt-list{columns:1}
   .verdict,.sim{padding:16px 12px}
   .flow>li{padding:10px 10px 10px 38px}
   .flow>li::before{left:8px;top:10px}
@@ -242,6 +264,7 @@ td{font-variant-numeric:tabular-nums}
       <div><b>Insulation V</b><small>Micro-risk cover, priced from public data</small></div>
     </div>
     <div class="top-actions">
+      <span class="tag" id="hkoTag" title="Live from the Hong Kong Observatory">Checking HKO…</span>
       <span class="tag" id="engineTag">Demo build</span>
       <button class="btn btn-ghost btn-sm" id="resetTop" type="button">Start over</button>
     </div>
@@ -347,7 +370,11 @@ td{font-variant-numeric:tabular-nums}
           <div class="big"><span id="qIf">If it happens</span><b id="qPay"></b></div>
           <p class="note" id="qWork"></p>
           <p class="meta" id="qProb"></p>
-          <button class="linkbtn" type="button" id="probBtn" aria-expanded="false" aria-controls="probPanel">How did we get this chance?</button>
+          <div class="bd" aria-hidden="true"><span id="bdClaims"></span></div>
+          <p class="meta" id="bdText"></p>
+          <p class="meta" id="qSeason" hidden></p>
+          <p class="meta" id="qLive" hidden></p>
+          <button class="linkbtn" type="button" id="probBtn" aria-expanded="false" aria-controls="probPanel" data-open="Hide the working">How did we get this chance?</button>
           <div class="why" id="probPanel" hidden>
             <span class="badge data" id="probType"></span>
             <ol id="probSteps"></ol>
@@ -431,28 +458,46 @@ td{font-variant-numeric:tabular-nums}
       <button class="btn btn-ghost btn-sm" type="button" id="simClose">Close</button>
     </div>
     <p class="sim-model" id="simModel"></p>
-    <button class="linkbtn" type="button" id="simMoreBtn" aria-expanded="false" aria-controls="simMore">Show every parameter and its source</button>
+    <button class="linkbtn" type="button" id="simMoreBtn" aria-expanded="false" aria-controls="simMore" data-open="Hide the parameters">Show every parameter and its source</button>
     <div class="why" id="simMore" hidden><ul id="simParams"></ul></div>
 
     <div class="sim-part">
       <h4>1. One customer</h4>
-      <p class="note">Roll real random numbers for one policy, the way an actual year would play out.</p>
-      <div class="row"><button class="btn btn-ghost btn-sm" type="button" id="rollBtn">Roll the dice for one customer</button></div>
+      <p class="note">Roll real random numbers for one customer at a time, or many at once, and watch the premiums and payouts add up.</p>
+      <div class="row">
+        <button class="btn btn-ghost btn-sm" type="button" id="rollBtn">Roll once</button>
+        <button class="btn btn-ghost btn-sm" type="button" id="roll100">Roll 100</button>
+        <button class="btn btn-ghost btn-sm" type="button" id="roll1000">Roll 1,000</button>
+        <button class="btn btn-ghost btn-sm" type="button" id="rollReset">Reset</button>
+      </div>
       <div class="roll-out" id="rollOut" aria-live="polite"></div>
     </div>
 
     <div class="sim-part">
       <h4 id="poolTitle">2. The whole pool, 10,000 times</h4>
       <p class="note" id="simLead"></p>
+      <div class="sliders" id="simSliders"></div>
+      <p class="note" id="sliderNote"></p>
       <div class="sim-chart" id="simChart" role="img"></div>
       <div class="sim-stats" id="simStats"></div>
       <p class="note" id="simNote"></p>
       <div class="row"><button class="btn btn-ghost btn-sm" type="button" id="rerunBtn">Run again with new random numbers</button></div>
     </div>
+
+    <div class="sim-part" id="btPart" hidden>
+      <h4 id="btTitle">3. Reality check: real years of data</h4>
+      <p class="note" id="btLead"></p>
+      <label class="check" id="btStressRow"><input type="checkbox" id="btStress"> Busy-night stress test: 2 concerts on every storm evening (as in our R stress test)</label>
+      <div class="sim-chart" id="btChart" role="img"></div>
+      <div class="sim-stats" id="btStats"></div>
+      <p class="note" id="btNote"></p>
+      <button class="linkbtn" type="button" id="btListBtn" aria-expanded="false" aria-controls="btList" data-open="Hide the list">Show every storm</button>
+      <div class="why" id="btList" hidden><ul class="bt-list" id="btItems"></ul></div>
+    </div>
   </section>
 
   <footer class="foot">
-    <span>Demonstration build for the CUHK OSALP 2025-04 capstone showcase.</span>
+    <span>Demonstration build for the CUHK OSALP 2025-04 capstone showcase. <a href="https://insurnce.github.io/insulation-v/changes.html">What we changed after feedback</a></span>
     <span>Specimen only. Not a real insurance offer. AI underwriter built with Llama.</span>
   </footer>
 </div>
@@ -478,11 +523,12 @@ td{font-variant-numeric:tabular-nums}
   $('engineTag').textContent = hasServer ? 'AI underwriter on' : 'Built-in products only';
 
   function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
-  function show(ids){ views.forEach(function(v){ $(v).hidden = ids.indexOf(v) === -1; }); window.scrollTo({top:0,behavior:reduce?'auto':'smooth'}); }
+  function animateIn(el){ if (reduce || !el) return; el.classList.remove('rise'); void el.offsetWidth; el.classList.add('rise'); }
+  function show(ids){ views.forEach(function(v){ var el = $(v), was = el.hidden; el.hidden = ids.indexOf(v) === -1; if (was && !el.hidden) animateIn(el); }); window.scrollTo({top:0,behavior:reduce?'auto':'smooth'}); }
   function step(n){ ['st1','st2','st3'].forEach(function(id,i){ $(id).className = (i+1===n) ? 'on' : (i+1<n ? 'done' : ''); }); }
   function money(x){ return 'HK$' + Math.round(x).toLocaleString('en-US'); }
   function num(x){ return Math.round(x).toLocaleString('en-US'); }
-  function pct(p){ var v = p*100; return (v < 0.01 ? v.toFixed(4) : v < 0.1 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + '%'; }
+  function pct(p){ if (!p) return '0%'; var v = p*100; return (v < 0.01 ? v.toFixed(4) : v < 0.1 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + '%'; }
   function clamp(x,a,b){ x = Number(x); if (!isFinite(x)) x = a; return Math.min(Math.max(x,a),b); }
   function isoIn(days){ var d = new Date(Date.now()+days*864e5); return d.toISOString().slice(0,10); }
   function fmtDate(iso){ if (!iso) return ''; var p = iso.split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }
@@ -493,9 +539,9 @@ td{font-variant-numeric:tabular-nums}
   function toggle(btnId, panelId, open){
     var b = $(btnId), panel = $(panelId);
     if (open == null) open = panel.hidden;
-    panel.hidden = !open; b.setAttribute('aria-expanded', String(open));
+    var was = panel.hidden; panel.hidden = !open; b.setAttribute('aria-expanded', String(open)); if (was && open) animateIn(panel);
     if (b.dataset.closed == null) b.dataset.closed = b.textContent;
-    b.textContent = open ? 'Hide the explanation' : b.dataset.closed;
+    b.textContent = open ? (b.dataset.open || 'Hide the explanation') : b.dataset.closed;
   }
 
   // ---------- The five insurability tests ----------
@@ -534,12 +580,20 @@ td{font-variant-numeric:tabular-nums}
       fit:'We pay only against a police burglary report, the same records the rate is built from.' },
     typhoon_day: { unit:'day', per:'day', noun:'day',
       stat:'Signal No. 8 or higher was in force on 76 of the 9,497 days from 2000 to 2025',
+      mstat:'Signal No. 8 or higher was in force on {c} of the {d} {m} days from 2000 to 2025',
       rateText:'76 ÷ 9,497', rate:76/9497, history:hkoHistory([0,3,2,4,1,0,0,1,7,6,0,1,6,3,2,1,3,6,2,1,3,4,6,5,4,5]),
       source:'Hong Kong Observatory, Warnings & Signals Database, 2000–2025',
       fit:'The trigger is the HKO signal itself, so the HKO record measures exactly the event we pay on.' },
     storm_daytime: { unit:'day', per:'day', noun:'day',
       stat:'Black Rain or Signal No. 8+ was in force between 09:00 and 18:00 on 61 of the 9,497 days from 2000 to 2025',
+      mstat:'Black Rain or Signal No. 8+ was in force between 09:00 and 18:00 on {c} of the {d} {m} days from 2000 to 2025',
       rateText:'61 ÷ 9,497', rate:61/9497, history:hkoHistory([0,2,1,1,1,0,1,1,4,2,2,1,2,3,1,2,3,6,1,1,2,5,3,6,2,8]),
+      source:'Hong Kong Observatory, Warnings & Signals Database, 2000–2025',
+      fit:'The trigger is the HKO warning itself, so the HKO record measures exactly the event we pay on.' },
+    storm_evening: { unit:'day', per:'evening', noun:'evening',
+      stat:'Black Rain or Signal No. 8+ was in force between 17:00 and 23:00 on 47 of the 9,497 evenings from 2000 to 2025',
+      mstat:'Black Rain or Signal No. 8+ was in force between 17:00 and 23:00 on {c} of the {d} {m} evenings from 2000 to 2025',
+      rateText:'47 ÷ 9,497', rate:47/9497, history:hkoHistory([0,3,1,2,1,0,0,1,5,2,1,0,2,1,3,1,3,3,1,1,3,2,3,2,1,5]),
       source:'Hong Kong Observatory, Warnings & Signals Database, 2000–2025',
       fit:'The trigger is the HKO warning itself, so the HKO record measures exactly the event we pay on.' },
     bag_delay: { unit:'event', per:'flight', noun:'flight',
@@ -548,23 +602,45 @@ td{font-variant-numeric:tabular-nums}
       source:'SITA Baggage IT Insights 2025 and 2026 (worldwide airline data)',
       fit:"We pay against the airline's Property Irregularity Report for a delayed bag, the same event SITA counts." }
   };
-  function priceFromData(id, nIn){
+  // Days with a warning in force, by calendar month, 2000-2025 (HKO Warnings & Signals Database; project file 01_raw_data).
+  var MONTHLY = {
+    typhoon_day:[0,0,0,0,0,6,17,17,23,9,4,0],
+    storm_daytime:[0,0,0,0,3,5,14,12,15,10,2,0],
+    storm_evening:[0,0,1,1,1,2,10,10,14,7,1,0] };
+  var MONTH_DAYS = [806,735,806,780,806,780,806,806,780,806,780,806];   // days in each month over the 26 years
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function monthOf(iso){ return Math.min(Math.max((+String(iso || '').slice(5,7) || 1) - 1, 0), 11); }
+  // Named storm days for each HKO row, 2000-2025 (Black Rain has no name), and counts by year (rows) and month (digits).
+  var HKO_EVENTS = {"typhoon_day":[["2001-07-05","Utor"],["2001-07-06","Utor"],["2001-07-25","Yutu"],["2002-09-11","Hagupit"],["2002-09-12","Hagupit"],["2003-07-23","Imbudo"],["2003-07-24","Imbudo"],["2003-09-02","Dujuan"],["2003-09-03","Dujuan"],["2004-07-16","Kompasu"],["2007-08-10","Pabuk"],["2008-06-24","Fengshen"],["2008-06-25","Fengshen"],["2008-08-06","Kammuri"],["2008-08-22","Nuri"],["2008-08-23","Nuri"],["2008-09-23","Hagupit"],["2008-09-24","Hagupit"],["2009-07-18","Molave"],["2009-07-19","Molave"],["2009-08-04","Goni"],["2009-08-05","Goni"],["2009-09-14","Koppu"],["2009-09-15","Koppu"],["2011-09-29","Nesat"],["2012-06-29","Doksuri"],["2012-06-30","Doksuri"],["2012-07-23","Vicente"],["2012-07-24","Vicente"],["2012-08-16","Kai-Tak"],["2012-08-17","Kai-Tak"],["2013-08-14","Utor"],["2013-09-22","Usagi"],["2013-09-23","Usagi"],["2014-09-15","Kalmaegi"],["2014-09-16","Kalmaegi"],["2015-07-09","Linfa"],["2016-08-01","Nida"],["2016-08-02","Nida"],["2016-10-21","Haima"],["2017-06-12","Merbok"],["2017-06-13","Merbok"],["2017-07-23","Roke"],["2017-08-23","Hato"],["2017-08-27","Pakhar"],["2017-10-15","Khanun"],["2018-09-16","Mangkhut"],["2018-09-17","Mangkhut"],["2019-07-31","Wipha"],["2020-08-18","Higos"],["2020-08-19","Higos"],["2020-10-13","Nangka"],["2021-10-09","Lionrock"],["2021-10-10","Lionrock"],["2021-10-12","Kompasu"],["2021-10-13","Kompasu"],["2022-07-01","Chaba"],["2022-07-02","Chaba"],["2022-08-24","Ma-On"],["2022-08-25","Ma-On"],["2022-11-02","Nalgae"],["2022-11-03","Nalgae"],["2023-07-17","Talim"],["2023-09-01","Saola"],["2023-09-02","Saola"],["2023-10-08","Koinu"],["2023-10-09","Koinu"],["2024-09-05","Yagi"],["2024-09-06","Yagi"],["2024-11-13","Toraji"],["2024-11-14","Toraji"],["2025-07-20","Wipha"],["2025-09-07","Tapah"],["2025-09-08","Tapah"],["2025-09-23","Ragasa"],["2025-09-24","Ragasa"]],"storm_daytime":[["2001-07-06","Utor"],["2001-07-25","Yutu"],["2002-09-11","Hagupit"],["2003-09-02","Dujuan"],["2004-07-16","Kompasu"],["2006-06-09","Black Rain"],["2007-08-10","Pabuk"],["2008-06-07","Black Rain"],["2008-06-25","Fengshen"],["2008-08-06","Kammuri"],["2008-08-22","Nuri"],["2009-09-14","Koppu"],["2009-09-15","Koppu"],["2010-07-22","Black Rain"],["2010-07-28","Black Rain"],["2011-09-29","Nesat"],["2012-07-23","Vicente"],["2012-07-24","Vicente"],["2013-05-22","Black Rain"],["2013-08-14","Utor"],["2013-09-23","Usagi"],["2014-09-16","Kalmaegi"],["2015-05-26","Black Rain"],["2015-07-09","Linfa"],["2016-08-02","Nida"],["2016-10-19","Black Rain"],["2016-10-21","Haima"],["2017-05-24","Black Rain"],["2017-06-12","Merbok"],["2017-07-23","Roke"],["2017-08-23","Hato"],["2017-08-27","Pakhar"],["2017-10-15","Khanun"],["2018-09-16","Mangkhut"],["2019-07-31","Wipha"],["2020-08-19","Higos"],["2020-10-13","Nangka"],["2021-06-28","Black Rain"],["2021-10-08","Black Rain"],["2021-10-09","Lionrock"],["2021-10-12","Kompasu"],["2021-10-13","Kompasu"],["2022-07-02","Chaba"],["2022-08-25","Ma-On"],["2022-11-02","Nalgae"],["2023-07-17","Talim"],["2023-09-01","Saola"],["2023-09-02","Saola"],["2023-09-08","Black Rain"],["2023-10-08","Koinu"],["2023-10-09","Koinu + Black Rain"],["2024-09-06","Yagi"],["2024-11-14","Toraji"],["2025-07-20","Wipha"],["2025-07-29","Black Rain"],["2025-08-02","Black Rain"],["2025-08-05","Black Rain"],["2025-08-14","Black Rain"],["2025-09-08","Tapah"],["2025-09-23","Ragasa"],["2025-09-24","Ragasa"]],"storm_evening":[["2001-07-05","Utor"],["2001-07-25","Yutu"],["2001-09-01","Black Rain"],["2002-09-11","Hagupit"],["2003-07-23","Imbudo"],["2003-09-02","Dujuan"],["2004-07-16","Kompasu"],["2007-08-10","Pabuk"],["2008-04-19","Black Rain"],["2008-06-24","Fengshen"],["2008-08-06","Kammuri"],["2008-08-22","Nuri"],["2008-09-23","Hagupit"],["2009-08-04","Goni"],["2009-09-14","Koppu"],["2010-07-22","Black Rain"],["2012-07-23","Vicente"],["2012-08-16","Kai-Tak"],["2013-09-22","Usagi"],["2014-03-30","Black Rain"],["2014-05-08","Black Rain"],["2014-09-15","Kalmaegi"],["2015-07-09","Linfa"],["2016-08-01","Nida"],["2016-10-19","Black Rain"],["2016-10-21","Haima"],["2017-06-12","Merbok"],["2017-08-23","Hato"],["2017-10-15","Khanun"],["2018-09-16","Mangkhut"],["2019-07-31","Wipha"],["2020-08-18","Higos"],["2020-09-30","Black Rain"],["2020-10-13","Nangka"],["2021-10-09","Lionrock"],["2021-10-12","Kompasu"],["2022-07-01","Chaba"],["2022-08-24","Ma-On"],["2022-11-02","Nalgae"],["2023-09-01","Saola"],["2023-10-08","Koinu"],["2024-09-05","Yagi"],["2025-07-20","Wipha"],["2025-08-05","Black Rain"],["2025-09-07","Tapah"],["2025-09-23","Ragasa"],["2025-09-24","Ragasa"]]};
+  var HKO_YM = {"typhoon_day":["000000000000","000000300000","000000002000","000000202000","000000100000","000000000000","000000000000","000000010000","000002032000","000000222000","000000000000","000000001000","000002220000","000000012000","000000002000","000000100000","000000020100","000002120100","000000002000","000000100000","000000020100","000000000400","000000220020","000000102200","000000002020","000000104000"],"storm_daytime":["000000000000","000000200000","000000001000","000000001000","000000100000","000000000000","000001000000","000000010000","000002020000","000000002000","000000200000","000000001000","000000200000","000010011000","000000001000","000010100000","000000010200","000011120100","000000001000","000000100000","000000010100","000001000400","000000110010","000000103200","000000001010","000000233000"],"storm_evening":["000000000000","000000201000","000000001000","000000101000","000000100000","000000000000","000000000000","000000010000","000101021000","000000011000","000000100000","000000000000","000000110000","000000001000","001010001000","000000100000","000000010200","000001010100","000000001000","000000100000","000000011100","000000000200","000000110010","000000001100","000000001000","000000113000"]};
+  var STORM_EVENINGS = HKO_EVENTS.storm_evening;
+
+  // month (0-11) is optional: for HKO rows it prices from that calendar month only.
+  function priceFromData(id, nIn, month){
     var d = DATA[id], max = d.unit === 'year' ? 12 : 30;
     var n = Math.min(Math.max(Math.round(Number(nIn) || 1), 1), max);
+    var seasonal = month != null && MONTHLY[id], c = seasonal ? MONTHLY[id][month] : 0;
+    var rate = seasonal ? c / MONTH_DAYS[month] : d.rate;
     var scale = function(r){ return d.unit === 'year' ? Math.min(r * n / 12, 1) : 1 - Math.pow(1 - r, n); };
-    var p = scale(d.rate), period;
-    var steps = ['Data: ' + d.stat + ' (' + d.source + ').', 'Rate: ' + d.rateText + ' = ' + pct(d.rate) + ' per ' + d.per + '.'];
+    var p = scale(rate), period;
+    var steps = seasonal
+      ? ['Data: ' + d.mstat.replace('{c}', c).replace('{d}', num(MONTH_DAYS[month])).replace('{m}', MONTHS[month]) + ' (' + d.source + ').',
+         'Rate: ' + c + ' ÷ ' + num(MONTH_DAYS[month]) + ' = ' + pct(rate) + ' per ' + d.per + ' in ' + MONTHS[month] + '.',
+         'Seasonal: we price by month because storms cluster from July to October. The all-year rate would be ' + pct(d.rate) + ' per ' + d.per + '.']
+      : ['Data: ' + d.stat + ' (' + d.source + ').', 'Rate: ' + d.rateText + ' = ' + pct(d.rate) + ' per ' + d.per + '.'];
+    if (seasonal && !c) steps.push('None in 26 years of ' + MONTHS[month] + ' records. That does not make it impossible, so the HK$10 minimum premium still applies.');
     if (d.unit === 'year'){
       period = n === 12 ? 'one year' : n + (n === 1 ? ' month' : ' months');
-      if (n !== 12) steps.push('Your policy lasts ' + period + '. For a rare event, chance ≈ rate × time: ' + pct(d.rate) + ' × ' + n + ' ÷ 12 = ' + pct(p) + '.');
+      if (n !== 12) steps.push('Your policy lasts ' + period + '. For a rare event, chance ≈ rate × time: ' + pct(rate) + ' × ' + n + ' ÷ 12 = ' + pct(p) + '.');
     } else {
       period = n === 1 ? 'one ' + d.noun : n + ' ' + d.noun + 's';
-      if (n > 1) steps.push('Your policy covers ' + period + '. Chance of at least one: 1 − (1 − ' + pct(d.rate) + ')^' + n + ' = ' + pct(p) + '.');
+      if (n > 1) steps.push('Your policy covers ' + period + '. Chance of at least one: 1 − (1 − ' + pct(rate) + ')^' + n + ' = ' + pct(p) + '.');
     }
     steps.push('Why this data fits: ' + d.fit);
-    var yearly = d.unit === 'year' ? d.rate : p;
+    var yearly = d.unit === 'year' ? rate : p;
     return { p:p, steps:steps, period:period, yearly:yearly, source:d.source,
-      history:d.history.map(function(h){ return [h[0], scale(h[1])]; }),
+      history:seasonal ? HKO_YM[id].map(function(row, k){ var y = 2000 + k, dim = new Date(y, month + 1, 0).getDate(); return [String(y), scale(+row[month] / dim)]; })
+                       : d.history.map(function(h){ return [h[0], scale(h[1])]; }),
       test:'Published data puts the chance at ' + pct(yearly) + (d.unit === 'year' ? ' a year' : ' for this cover') + (yearly < 0.2 ? ', below our 20% limit.' : ', above our 20% limit, so a fair premium would cost almost as much as the loss.') };
   }
 
@@ -584,7 +660,7 @@ td{font-variant-numeric:tabular-nums}
     item:'The Midnight Echoes, Live in Hong Kong', where:'Kai Tak Stadium', date:'2026-11-14',
     labels:{item:'Concert', where:'Venue', date:'Concert date', cost:'Non-refundable trip costs', whereDate:'Venue and date'},
     hints:{date:'Sales close 72 hours before the show.', cost:'Train, hotel and booking fees. Not the ticket itself.'},
-    cutoff72:true, period:'one concert', dataSource:'HKO 2000–2025 and documented cancellations',
+    cutoff72:true, weather:true, period:'one concert', dataSource:'HKO 2000–2025 and documented cancellations',
     pSteps:['Weather data: Typhoon Signal 8+ or Black Rain was in force between 17:00 and 23:00 on 47 of the 9,497 evenings from 2000 to 2025 (Hong Kong Observatory, Warnings & Signals Database).',
       'Weather rate: 47 ÷ 9,497 = 0.495% per concert evening.',
       'Other causes: news reports document 4 large shows cancelled or postponed for non-weather reasons from Jan 2024 to Sep 2026 (Sammi Cheng ×3, stage failure; Post Malone ×1), out of about 522 large concert sessions (190 a year: 285 in 18 months, HKSAR Government LCQ9, 18 Jun 2025). 4 ÷ 522 = 0.77%.',
@@ -690,16 +766,34 @@ td{font-variant-numeric:tabular-nums}
       labels:{item:'What is covered', where:'Where', date:'Cover starts', cost:'Amount at risk', whereDate:'Where and when'},
       hints:{date:'Cover runs for one policy period from this date.', cost:o.costHint}, cutoff72:false,
       trigger:o.trigger, exclusions:o.exclusions, triggerShort:o.triggerShort,
-      period:o.period || 'one policy period', pSteps:o.pSteps || [], pHist:o.pHist || [], dataSource:o.dataSource || '' };
+      period:o.period || 'one policy period', pSteps:o.pSteps || [], pHist:o.pHist || [], dataSource:o.dataSource || '',
+      season:o.season || null, weather:!!o.season, ref:o.ref || null };
+    if (P.season) P.hints.date = 'The price depends on the month: storms cluster from July to October.';
     P.limit = Math.round((o.L - o.d) * 0.8 / 10) * 10;
     P.premium = priceOf(P);
-    P.basis = 'Chance the trigger happens: ' + pct(P.p) + ' per policy (' + P.period + '). How: ' + P.pSteps.join(' ') + ' Expected loss ' + pct(P.p) + ' × ' + money(payoutOf(P,P.L)) + ' = HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '. Premium = expected loss × 2 (100% loading for costs and capital), rounded to HK$5, with a HK$10 minimum to cover the cost of issuing a policy.';
+    P.basis = basisOf(P);
     P.story = function(q){ return { text:'Trigger confirmed: ' + P.triggerShort + '. ' + money(q.y) + ' is on its way to ' + q.first + '. No form, no adjuster.', steps:[cap(P.triggerShort),'Record checked against the official source'] }; };
     return P;
   }
+  function basisOf(P){
+    return 'Chance the trigger happens: ' + pct(P.p) + ' per policy (' + P.period + '). How: ' + P.pSteps.join(' ') + ' Expected loss ' + pct(P.p) + ' × ' + money(payoutOf(P,P.L)) + ' = HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '. Premium = expected loss × 2 (100% loading for costs and capital), rounded to HK$5, with a HK$10 minimum to cover the cost of issuing a policy.';
+  }
+  // HKO-priced products follow the month of the start date.
+  function applySeason(P, iso){
+    if (!P.season || !iso) return;
+    var m = monthOf(iso);
+    if (P.season.month === m) return;
+    P.season.month = m;
+    var q = priceFromData(P.season.ref, P.season.n, m);
+    P.p = q.p; P.pHist = q.history; P.period = q.period;
+    P.pSteps = q.steps.concat(P.season.fit ? ['For your request: ' + P.season.fit] : []);
+    P.checks[3] = [q.yearly < 0.2, q.yearly < 0.2 ? 'Yes. ' + pct(q.p) + ' per policy in ' + MONTHS[m] + ', from HKO data.' : 'No. Too likely.', q.test];
+    P.premium = priceOf(P); P.basis = basisOf(P);
+  }
   // c = [short, facts] for tests 1, 2, 3 and 5; test 4 comes from the data.
   function fromData(o){
-    var q = priceFromData(o.ref, o.exposure), c = o.c;
+    if (MONTHLY[o.ref]) o.season = {ref:o.ref, n:o.exposure, month:monthOf(isoIn(7))};
+    var q = priceFromData(o.ref, o.exposure, o.season ? o.season.month : null), c = o.c;
     o.checks = [[true,c[0][0],c[0][1]], [true,c[1][0],c[1][1]], [true,c[2][0],c[2][1]],
       [q.yearly < 0.2, q.yearly < 0.2 ? 'Yes. ' + pct(q.p) + ' per policy, from published data.' : 'No. Too likely.', q.test], [true,c[3][0],c[3][1]]];
     o.p = q.p; o.pSteps = q.steps; o.pHist = q.history; o.period = q.period; o.dataSource = q.source;
@@ -806,7 +900,7 @@ td{font-variant-numeric:tabular-nums}
     }
     var L = clamp(r.amount_at_risk_hkd, 100, 20000), T = ROW_TRIGGER[r.reference_id];   // the trigger must be the event the data counts
     if (T){ r.trigger = T[0]; r.trigger_short = T[1]; }
-    var P = generic({ origin:'ai', name:String(r.product_name || 'Micro-risk Cover').slice(0,60), item:String(r.covered_item || text).slice(0,120),
+    var P = generic({ origin:'ai', ref:r.reference_id, name:String(r.product_name || 'Micro-risk Cover').slice(0,60), item:String(r.covered_item || text).slice(0,120),
       blurb:String(r.summary || ''), loss:info.loss, L:L, d:clamp(r.deductible_hkd, 0, L*0.5), p:Math.max(r.probability, 0.00001), checks:checks,
       period:String(r.policy_period || 'one policy period'), dataSource:String(r.data_source || 'published data'),
       pSteps:r.probability_steps.map(String).concat(r.reference_fit ? ['For your request: ' + r.reference_fit] : []),
@@ -814,6 +908,11 @@ td{font-variant-numeric:tabular-nums}
       costHint:String(r.amount_help || ''), trigger:String(r.trigger || 'We pay when an official record confirms the insured event.'),
       triggerShort:String(r.trigger_short || 'the insured event is confirmed'), exclusions:(Array.isArray(r.exclusions) ? r.exclusions : []).map(String).slice(0,4) });
     if (!P.exclusions.length) P.exclusions = ['Events that started before cover began.','Deliberate or self-caused losses.'];
+    if (MONTHLY[r.reference_id]){   // reprice HKO covers by month, on this page
+      P.season = {ref:r.reference_id, n:parseInt(r.policy_period, 10) || 1, fit:String(r.reference_fit || ''), month:null};
+      P.weather = true; P.hints.date = 'The price depends on the month: storms cluster from July to October.';
+      applySeason(P, P.date);
+    }
     return {verdict:'yes', product:P};
   }
 
@@ -951,16 +1050,30 @@ td{font-variant-numeric:tabular-nums}
     $('lEvent').textContent = P.labels.item; $('lVenue').textContent = P.labels.where; $('lDate').textContent = P.labels.date; $('lCost').textContent = P.labels.cost;
     $('hDate').textContent = P.hints.date; $('hCost').textContent = P.hints.cost || '';
     $('fEvent').value = P.item; $('fVenue').value = P.where; $('fDate').value = P.date; $('fCost').value = P.L; $('fCost').max = P.maxL;
-    $('qPrem').textContent = money(P.premium); $('qDed').textContent = money(P.d); $('qCo').textContent = Math.round(P.c*100) + '%'; $('qLim').textContent = money(P.limit);
+    $('qDed').textContent = money(P.d); $('qCo').textContent = Math.round(P.c*100) + '%'; $('qLim').textContent = money(P.limit);
     $('qIf').textContent = P.kind === 'concert' ? 'If the show is cancelled or postponed' : 'If the trigger happens';
-    $('qProb').textContent = 'Chance per policy (' + P.period + '): ' + pct(P.p) + '. Expected loss: HK$' + (P.p*payoutOf(P,P.L)).toFixed(2) + '.';
     $('probType').textContent = 'From published data';
-    fill($('probSteps'), P.pSteps);
-    $('probRange').textContent = P.rangeText || rangeText(P.pHist);
+    applySeason(P, P.date); refreshPricing(P);
     toggle('probBtn', 'probPanel', false);
     $('simBox').hidden = true;
     show(['viewCheck','viewYes']); updateQuote();
     $('viewYes').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+  }
+  function refreshPricing(P){
+    var el = P.p * payoutOf(P, P.L);
+    $('qPrem').textContent = money(P.premium);
+    $('qProb').textContent = 'Chance per policy (' + P.period + '): ' + pct(P.p) + '. Expected loss: HK$' + el.toFixed(2) + '.';
+    fill($('probSteps'), P.pSteps);
+    $('probRange').textContent = P.rangeText || rangeText(P.pHist);
+    $('bdClaims').style.width = (Math.min(el / P.premium, 1) * 100).toFixed(1) + '%';
+    $('bdText').textContent = 'Where your ' + money(P.premium) + ' goes: HK$' + el.toFixed(2) + ' pays expected claims (dark bar); HK$' + (P.premium - el).toFixed(2) + ' covers costs, capital and margin' +
+      (P.premium === 10 && el * 2 < 10 ? ', set by the HK$10 minimum that covers the cost of issuing a policy.' : '.');
+    var note = '';
+    if (P.kind === 'concert'){
+      var m = monthOf($('fDate').value || P.date), c = MONTHLY.storm_evening[m], wx = c / MONTH_DAYS[m], fair = Math.max(10, Math.round((wx + 0.01) * payoutOf(P, P.L) * 2 / 5) * 5);
+      note = 'Seasonal check: for a ' + MONTHS[m] + ' show the weather chance is ' + pct(wx) + ' (' + c + ' of ' + num(MONTH_DAYS[m]) + ' ' + MONTHS[m] + ' evenings, HKO 2000–2025), so a seasonal price would be about ' + money(fair) + '. We charge a flat HK$25 all year: simpler for fans, and it balances out across the seasons.';
+    } else if (P.season) note = 'Priced for ' + MONTHS[P.season.month] + ' from HKO monthly records. Change the start date to see the price move: July to October costs most.';
+    $('qSeason').textContent = note; $('qSeason').hidden = !note;
   }
   function rangeText(hist){
     if (!hist || hist.length < 2) return '';
@@ -980,6 +1093,11 @@ td{font-variant-numeric:tabular-nums}
       if (P.cutoff72 && lead < 72*3600e3) err = err || 'Sales close 72 hours before the show. Pick a later concert.';
       if (!P.cutoff72 && lead < -864e5) err = err || 'Cover must start today or later.';
     }
+    var paused = P.weather && live.state === 'ok' && live.active.length;
+    if (paused) err = err || 'Sales paused: HKO has ' + live.active.join(' and ') + ' in force. We stop selling weather cover once a warning is up, so nobody can buy after the danger is known.';
+    $('qLive').hidden = !P.weather; $('qLive').className = 'meta' + (paused ? ' paused' : '');
+    $('qLive').textContent = live.state === 'ok' ? (paused ? 'Live HKO check: ' + live.active.join(', ') + ' in force now, so sales are paused.' : 'Live HKO check (' + live.at.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + '): no tropical cyclone signal or rainstorm warning in force, so sales are open.')
+      : live.state === 'error' ? 'Live HKO check unavailable right now. The rule still applies: no sales once a warning is up.' : 'Checking live HKO warnings…';
     var L = isFinite(f.L) ? clamp(f.L, 0, P.maxL) : 0, y = payoutOf(P, L);
     $('qPay').textContent = money(y);
     $('qWork').textContent = L <= P.d ? 'Below the ' + money(P.d) + ' deductible, so nothing would be paid.'
@@ -988,10 +1106,33 @@ td{font-variant-numeric:tabular-nums}
     $('buyBtn').disabled = !!err || !f.name;
     return {f:f, L:L, y:y, err:err, first:(f.name.split(' ')[0] || 'you')};
   }
+  $('fDate').addEventListener('input', function(){ if (product){ applySeason(product, $('fDate').value); refreshPricing(product); } });
   ['fCost','fDate','fName','fEvent'].forEach(function(id){ $(id).addEventListener('input', updateQuote); });
   $('whyBtn').addEventListener('click', function(){ toggle('whyBtn', 'flowNo'); });
   $('yesWhyBtn').addEventListener('click', function(){ toggle('yesWhyBtn', 'flowYes'); });
   $('probBtn').addEventListener('click', function(){ toggle('probBtn', 'probPanel'); });
+
+  // ---------- Live HKO warnings (open data, no key needed) ----------
+  var live = {state:'loading', active:[], at:null};
+  var HKO_URL = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en';
+  function hkoName(k, v){
+    var c = String(v.code || '');
+    if (k === 'WTCSGNL'){ var m = c.match(/TC(\d+)([A-Z]*)/); return 'Tropical Cyclone Signal No. ' + (m ? m[1] + (m[2] ? ' ' + m[2] : '') : c); }
+    return ({WRAINA:'Amber', WRAINR:'Red', WRAINB:'Black'}[c] || '') + ' Rainstorm Warning';
+  }
+  function loadLive(){
+    var ctrl = new AbortController(); setTimeout(function(){ ctrl.abort(); }, 8000);
+    fetch(HKO_URL, {signal:ctrl.signal}).then(function(r){ return r.json(); }).then(function(j){
+      live.active = ['WTCSGNL','WRAIN'].filter(function(k){ return j && j[k] && j[k].actionCode !== 'CANCEL'; }).map(function(k){ return hkoName(k, j[k]); });
+      live.state = 'ok'; live.at = new Date(); showLive();
+    }).catch(function(){ live.state = 'error'; showLive(); });
+  }
+  function showLive(){
+    $('hkoTag').textContent = live.state === 'ok' ? (live.active.length ? 'HKO now: ' + live.active.join(', ') : 'HKO now: no storm warnings') : live.state === 'error' ? 'HKO live check unavailable' : 'Checking HKO…';
+    if (product) updateQuote();
+  }
+  loadLive(); setInterval(loadLive, 10 * 60 * 1000);
+  window.InsulationV = {recheckHKO:loadLive};   // lets the regression test re-run the live check with a test feed
 
   // ---------- Policy ----------
   $('buyBtn').addEventListener('click', function(){
@@ -1032,7 +1173,7 @@ td{font-variant-numeric:tabular-nums}
     [[0,s.steps[0]],[1,s.steps[1]],[1,'Trigger confirmed on policy ' + $('pNo').textContent],[2,'Payout of ' + money(q.y) + ' released']].forEach(function(r){
       var el = document.createElement('span'); el.textContent = hh(new Date(t.getTime()+r[0]*60000)) + '  ' + r[1]; $('payTl').appendChild(el);
     });
-    $('payoutBox').hidden = false; $('simBtn').disabled = true;
+    $('payoutBox').hidden = false; animateIn($('payoutBox')); $('simBtn').disabled = true;
     $('payoutBox').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});
   });
 
@@ -1052,45 +1193,63 @@ td{font-variant-numeric:tabular-nums}
   function rng(seed){ return function(){ seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function poisson(lam, u){ var lim = Math.exp(-lam), k = 0, q = u(); while (q > lim){ k++; q *= u(); } return k; }
   function binom(n, p, u){ var k = 0; for (var i = 0; i < n; i++) if (u() < p) k++; return k; }
+  // Exact for small pools; Poisson or normal approximation for big ones (the sliders go up to 10,000 policies).
+  function binomFast(n, p, u){
+    if (n <= 2000) return binom(n, p, u);
+    var m = n * p; if (m < 30) return poisson(m, u);
+    var z = Math.sqrt(-2 * Math.log(1 - u())) * Math.cos(2 * Math.PI * u());
+    return Math.max(0, Math.round(m + z * Math.sqrt(m * (1 - p))));
+  }
+  var POOLS = [100, 250, 500, 1000, 2500, 5000, 10000], RISKX = [0.5, 0.75, 1, 1.5, 2, 3], simOpts = {}, sliderTimer = null, lastSeed = SEED;
+  function riskX(){ return RISKX[opt('riskIdx', 2)]; }
+  // The chance per policy by real year, times the what-if slider.
+  function histK(P){ var k = riskX(); return hist(P).map(function(h){ return [h[0], Math.min(h[1] * k, 1)]; }); }
+  function opt(k, dflt){ return simOpts[k] == null ? dflt : simOpts[k]; }
   function hist(P){ return P.pHist && P.pHist.length ? P.pHist : [['', P.p]]; }
   function yearSpan(h){ return h.length > 1 ? h[0][0] + '–' + h[h.length-1][0] : ''; }
 
   function modelOf(P){
     var pay = payoutOf(P, P.L);
-    if (P.kind === 'concert') return {
-      unit:'year', policies:17500,
-      line:'Model: storm nights a year ~ Poisson(λ = 1.81, HKO); other cancellations ~ Binomial(175 shows, p = 1%).',
+    if (P.kind === 'concert'){
+      var C = opt('concerts', 175), po = opt('pOther', 1);
+      return {
+      unit:'year', policies:C * 100, concerts:C, pOther:po / 100,
+      line:'Model: storm nights a year ~ Poisson(λ = 1.81, HKO); other cancellations ~ Binomial(' + num(C) + ' shows, p = ' + po + '%).',
       params:['Storm nights per year: Poisson with λ = 47 ÷ 26 = 1.81 (HKO 2000–2025; the yearly variance 1.92 is close to the mean, so Poisson fits).',
-        'Concerts hit on a storm night: Poisson with mean 175 ÷ 365 = 0.48 (175 large concerts a year, SCMP 8 Jan 2025).',
-        'Other cancellations: Binomial(n = 175 concerts, p = 1%): documented 0.77%, rounded up.',
-        'A cancelled concert pays all 100 insured tickets at once: 175 × 100 = 17,500 policies a year (our sales assumption).',
+        'Concerts hit on a storm night: Poisson with mean ' + num(C) + ' ÷ 365 = ' + (C / 365).toFixed(2) + ' (' + (C === 175 ? '175 large concerts a year, SCMP 8 Jan 2025' : 'set by the slider; our base case is 175 a year') + ').',
+        'Other cancellations: Binomial(n = ' + num(C) + ' concerts, p = ' + po + '%)' + (po === 1 ? ': documented 0.77%, rounded up.' : ', set by the slider (base case 1%).'),
+        'A cancelled concert pays all 100 insured tickets at once: ' + num(C) + ' × 100 = ' + num(C * 100) + ' policies a year (our sales assumption).',
         'Payout per ticket: (1,200 − 150) × 80% = HK$840. Premium HK$25 a ticket.',
         '10,000 simulated years. Same model as our R code (02_portfolio_simulator.R).'] };
-    var h = hist(P), span = yearSpan(h);
+    }
+    var h = histK(P), span = yearSpan(h), k = riskX();
     var byYear = h.length <= 6 ? h.map(function(x){ return x[0] + ': ' + pct(x[1]); }).join(', ')
       : h.length + ' years, from ' + pct(Math.min.apply(null, h.map(function(x){ return x[1]; }))) + ' to ' + pct(Math.max.apply(null, h.map(function(x){ return x[1]; })));
+    var N = POOLS[opt('poolIdx', 3)];
     return {
-      unit:'policy period', policies:POOL,
-      line:'Model: claims ~ Binomial(n = 1,000 policies, p)' + (span ? ', with p taken from a random real year of data (' + span + ').' : ', p = ' + pct(P.p) + '.'),
-      params:['Pool size: 1,000 policies (a sales target, not a probability).',
-        'Chance per policy by year of data (' + P.dataSource + '): ' + byYear + '.',
-        'Each run: pick one real year at random, then draw the number of claims from Binomial(1,000, that year\'s chance).',
+      unit:'policy period', policies:N,
+      line:'Model: claims ~ Binomial(n = ' + num(N) + ' policies, p' + (k !== 1 ? ' × ' + k : '') + ')' + (span ? ', with p taken from a random real year of data (' + span + ').' : ', p = ' + pct(P.p) + '.'),
+      params:['Pool size: ' + num(N) + ' policies (a sales target set by the slider, not a probability).',
+        'What-if: ' + (k === 1 ? 'chance exactly as measured (slider at ×1).' : 'chance × ' + k + ' of what the data says, to test what happens if the data understates the risk.'),
+        'Chance per policy ' + (span ? 'by year of data' : '') + ' (' + P.dataSource + '): ' + byYear + '.',
+        'Each run: ' + (span ? 'pick one real year at random, then ' : '') + 'draw the number of claims from Binomial(' + num(N) + ', that chance)' + (N > 2000 ? ', using the Poisson or normal approximation for speed.' : '.'),
         'Payout per claim: ' + money(pay) + '. Premium ' + money(P.premium) + ' a policy.',
         '10,000 simulated policy periods.'] };
   }
   function simulate(P, seed){
     var u = rng(seed), pay = payoutOf(P, P.L), claims = new Array(RUNS), M = modelOf(P);
     if (P.kind === 'concert'){
-      var C = 175, T = 100, lam = 47/26, perEve = C/365;
+      var C = M.concerts, T = 100, lam = 47/26, perEve = C/365;
       for (var i = 0; i < RUNS; i++){
-        var hit = poisson(poisson(lam, u) * perEve, u), other = binom(C, 0.01, u);
+        var hit = poisson(poisson(lam, u) * perEve, u), other = binom(C, M.pOther, u);
         claims[i] = Math.min(hit + other, C) * T * pay;
       }
     } else {
       var h = hist(P);
-      for (var j = 0; j < RUNS; j++) claims[j] = binom(POOL, h[Math.floor(u() * h.length)][1], u) * pay;
+      h = histK(P);
+      for (var j = 0; j < RUNS; j++) claims[j] = binomFast(M.policies, h[Math.floor(u() * h.length)][1], u) * pay;
     }
-    var S = {unit:M.unit, income:P.premium * M.policies, claimsPer:(P.kind === 'concert' ? 0 : M.policies * hist(P).reduce(function(a, h){ return a + h[1]; }, 0) / hist(P).length)};
+    var S = {unit:M.unit, income:P.premium * M.policies, claimsPer:(P.kind === 'concert' ? 0 : M.policies * histK(P).reduce(function(a, h){ return a + h[1]; }, 0) / histK(P).length)};
     var sorted = claims.slice().sort(function(a,b){ return a - b; }), sum = 0, losing = 0;
     claims.forEach(function(c){ sum += c; if (c > S.income) losing++; });
     S.mean = sum / RUNS; S.pLose = losing / RUNS; S.var995 = sorted[Math.floor(0.995 * RUNS)] - S.income;
@@ -1103,41 +1262,165 @@ td{font-variant-numeric:tabular-nums}
   function openSim(){
     if (!product) return;
     var P = product, M = modelOf(P), box = $('simBox');
-    box.hidden = false;
+    var was = box.hidden; box.hidden = false; if (was) animateIn(box);
     $('simTitle').textContent = 'Simulation: ' + P.name;
-    $('simModel').textContent = M.line;
-    fill($('simParams'), M.params);
+    buildSliders(P);
     toggle('simMoreBtn', 'simMore', false);
-    rolls = {n:0, hits:0}; $('rollOut').innerHTML = '';
+    resetRolls();
     $('poolTitle').textContent = '2. The whole pool, ' + num(RUNS) + ' times';
+    $('btPart').hidden = false; $('btStress').checked = false; $('btStressRow').hidden = P.kind !== 'concert'; toggle('btListBtn', 'btList', false);
     runPool(SEED);
     box.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
   }
-  function runPool(seed){
-    var P = product, unit = modelOf(P).unit;
+  function buildSliders(P){
+    var box = $('simSliders'); box.innerHTML = ''; simOpts = {};
+    var defs = P.kind === 'concert'
+      ? [{k:'pOther', label:'Other-cause cancellation rate', min:0.5, max:2, step:0.25, val:1, fmt:function(v){ return v + '%'; }},
+         {k:'concerts', label:'Independent concerts covered a year', min:25, max:700, step:25, val:175, fmt:function(v){ return num(v); }}]
+      : [{k:'poolIdx', label:'Policies in the pool', min:0, max:POOLS.length - 1, step:1, val:3, fmt:function(v){ return num(POOLS[v]); }},
+         {k:'riskIdx', label:'What if the real chance is…', min:0, max:RISKX.length - 1, step:1, val:2, fmt:function(v){ return '×' + RISKX[v] + (RISKX[v] === 1 ? ' (as measured)' : ''); }}];
+    defs.forEach(function(d){
+      simOpts[d.k] = d.val;
+      var w = document.createElement('label'); w.className = 'slider';
+      w.innerHTML = '<span></span><b></b><input type="range">';
+      var inp = w.querySelector('input'), out = w.querySelector('b');
+      inp.min = d.min; inp.max = d.max; inp.step = d.step; inp.value = d.val;
+      w.querySelector('span').textContent = d.label; out.textContent = d.fmt(d.val);
+      inp.addEventListener('input', function(){
+        simOpts[d.k] = Number(inp.value); out.textContent = d.fmt(Number(inp.value));
+        clearTimeout(sliderTimer); sliderTimer = setTimeout(function(){ runPool(lastSeed, true); }, 200);
+      });
+      box.appendChild(w);
+    });
+    $('sliderNote').textContent = P.kind === 'concert'
+      ? 'Try it: raise the other-cause rate and losing years jump. Cover fewer concerts and each year swings more, because one storm night is a bigger share of the pool. That is why we pool many independent concerts, not many fans at one show.'
+      : 'Try it: a bigger pool makes the yearly result steadier (the law of large numbers), so fewer years lose money. Push the chance above ×1 to see how much safety margin the premium has if the data understates the risk.';
+  }
+  function runPool(seed, smooth){
+    lastSeed = seed;
+    var P = product, M0 = modelOf(P), unit = M0.unit;
+    $('simModel').textContent = M0.line; fill($('simParams'), M0.params);
     $('simLead').textContent = 'We replay a whole ' + unit + ' for the pool ' + num(RUNS) + ' times and count how often premiums cover the claims.';
-    $('simStats').innerHTML = ''; $('simNote').textContent = 'Simulating…';
-    if (window.Plotly) window.Plotly.purge($('simChart')); else $('simChart').innerHTML = '';   // purge resets Plotly's state too
+    $('simNote').textContent = smooth ? 'Updating…' : 'Simulating…';
+    $('simBox').classList.add('busy');
+    if (!smooth){ $('simStats').innerHTML = ''; if (window.Plotly){ Plotly.purge($('simChart')); Plotly.purge($('btChart')); } else { $('simChart').innerHTML = ''; } }   // purge resets Plotly's state too
     setTimeout(function(){
       var S = simulate(P, seed);
-      [['Premium income', money(S.income)], ['Average claims', money(S.mean)], ['Losing ' + S.unit + 's', pct(S.pLose)], ['Capital, 1-in-200', money(Math.max(S.var995, 0))]].forEach(function(r){
-        var d = document.createElement('div'); d.innerHTML = '<span></span><b></b>';
-        d.querySelector('span').textContent = r[0]; d.querySelector('b').textContent = r[1]; $('simStats').appendChild(d);
-      });
+      statTiles($('simStats'), [['Premium income', money(S.income)], ['Average claims', money(S.mean)], ['Losing ' + S.unit + 's', pct(S.pLose)], ['Capital, 1-in-200', money(Math.max(S.var995, 0))]]);
+      $('simBox').classList.remove('busy');
       var note = 'Red bars are ' + S.unit + 's where claims exceed premium income (' + pct(S.pLose) + ' of runs). Capital, 1-in-200 = the 99.5th percentile of claims minus premium income.' + (seed === SEED ? ' Fixed seed, so this first run is repeatable.' : ' New random seed: ' + seed + '.');
-      if (S.claimsPer && S.claimsPer < 5 && S.pLose > 0.1) note += ' Only about ' + S.claimsPer.toFixed(1) + ' claims are expected in a pool of 1,000, so one extra claim decides whether the pool makes money. A bigger pool or more capital would steady it.';
+      if (S.claimsPer && S.claimsPer < 5 && S.pLose > 0.1) note += ' Only about ' + S.claimsPer.toFixed(1) + ' claims are expected in a pool of ' + num(modelOf(P).policies) + ', so one extra claim decides whether the pool makes money. A bigger pool or more capital would steady it.';
       $('simNote').textContent = note;
       $('simChart').setAttribute('aria-label', 'Histogram of total claims across ' + num(RUNS) + ' simulated ' + S.unit + 's; ' + pct(S.pLose) + ' exceed premium income of ' + money(S.income) + '.');
       loadPlotly().then(function(Plotly){ draw(Plotly, S); }, function(){
         $('simChart').hidden = true;
         $('simNote').textContent = note + ' The chart needs an internet connection; the numbers above come from the same simulation.';
       });
+      runBacktest();
     }, 30);
   }
+
+  // ---------- Backtest: what Concert Trip Cover would have paid on real storm evenings ----------
+  function backtest(P){
+    var M = modelOf(P), C = M.concerts, T = 100, pay = payoutOf(P, P.L), stress = $('btStress').checked;
+    var perEve = stress ? 2 : C / 365, income = P.premium * C * T, other = C * M.pOther * T * pay;
+    var years = []; for (var y = 2000; y <= 2025; y++) years.push({y:y, ev:[]});
+    STORM_EVENINGS.forEach(function(e){ years[+e[0].slice(0,4) - 2000].ev.push(e); });
+    years.forEach(function(Y){ Y.wx = Y.ev.length * perEve * T * pay; Y.total = Y.wx + other; Y.lose = Y.total > income; });
+    return {years:years, income:income, other:other, perEve:perEve, stress:stress, C:C, pOther:M.pOther, pay:pay};
+  }
+  function fmtDay(iso){ var p = iso.split('-'); return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); }
+  // Every other product: expected claims if the pool had been sold in each real year of its data.
+  function backtestGeneric(P){
+    var M = modelOf(P), pay = payoutOf(P, P.L), N = M.policies, income = N * P.premium;
+    var evs = HKO_EVENTS[P.ref] ? HKO_EVENTS[P.ref].filter(function(e){ return !P.season || +e[0].slice(5,7) - 1 === P.season.month; }) : null;
+    var years = histK(P).map(function(h){
+      var Y = {y:h[0], p:h[1], total:N * h[1] * pay};
+      Y.lose = Y.total > income; Y.ev = evs ? evs.filter(function(e){ return e[0].slice(0,4) === h[0]; }) : [];
+      return Y;
+    });
+    return {years:years, income:income, N:N, pay:pay, evs:evs};
+  }
+  function statTiles(box, rows){
+    box.innerHTML = '';
+    rows.forEach(function(r){ var d = document.createElement('div'); d.innerHTML = '<span></span><b></b>'; d.querySelector('span').textContent = r[0]; d.querySelector('b').textContent = r[1]; box.appendChild(d); });
+  }
+  function runBacktest(){ if (product.kind === 'concert') runConcertBacktest(); else runGenericBacktest(); }
+  function runGenericBacktest(){
+    var P = product, B = backtestGeneric(P), n = B.years.length;
+    var worst = B.years.reduce(function(a, Y){ return Y.total > a.total ? Y : a; }, B.years[0]), losing = B.years.filter(function(Y){ return Y.lose; });
+    var span = n > 1 ? B.years[0].y + '–' + B.years[n-1].y : B.years[0].y;
+    $('btTitle').textContent = '3. Reality check: ' + (B.evs ? 'real storm days, ' : 'real years of data, ') + span;
+    $('btLead').textContent = 'If ' + num(B.N) + ' policies had been sold in each real year of our data' + (P.season ? ' (for ' + MONTHS[P.season.month] + ')' : '') + ', at ' + money(P.premium) + ' each, this is what the pool would have paid.';
+    statTiles($('btStats'), [['Years of real data', String(n)], ['Worst year', worst.y + ' (' + pct(worst.p) + ' chance)'],
+      ['Worst-year claims', money(worst.total) + ' (' + Math.round(worst.total / B.income * 100) + '% of premiums)'], ['Losing years', losing.length + ' of ' + n]]);
+    $('btNote').textContent = 'Each bar = ' + num(B.N) + ' policies × that year\'s chance × ' + money(B.pay) + ' payout' + (riskX() !== 1 ? ', with the what-if slider at ×' + riskX() : '') + '. ' +
+      (losing.length ? losing.length + ' of ' + n + ' real years would have lost money: the premium plus capital has to absorb years like ' + worst.y + '.' : 'No real year would have lost money at this price.') +
+      (n < 5 ? ' Only ' + n + ' years of data exist for this risk, so treat this as a sense check rather than proof.' : '');
+    $('btListBtn').hidden = !B.evs || !B.evs.length;
+    if (B.evs){ $('btListBtn').dataset.closed = 'Show all ' + B.evs.length + ' storm days'; if ($('btList').hidden) $('btListBtn').textContent = $('btListBtn').dataset.closed;
+      var items = $('btItems'); items.innerHTML = ''; B.evs.forEach(function(e){ var li = document.createElement('li'); li.textContent = fmtDay(e[0]) + ' · ' + e[1]; items.appendChild(li); }); }
+    plotBacktest(B.years.map(function(Y){ return Y.y; }), [{type:'bar', name:'Expected claims', x:B.years.map(function(Y){ return Y.y; }), y:B.years.map(function(Y){ return Y.total; }),
+      customdata:B.years.map(function(Y){ return pct(Y.p) + (Y.ev.length ? '<br>' + Y.ev.map(function(e){ return e[1] + ' (' + fmtDay(e[0]).replace(/ \d{4}$/, '') + ')'; }).join('<br>') : ''); }),
+      colorFor:B.years.map(function(Y){ return Y.lose; }), hovertemplate:'%{x}: claims HK$%{y:,.0f}<br>chance %{customdata}<extra></extra>'}], B.income, n > 10 ? 5 : 1);
+  }
+  function runConcertBacktest(){
+    var P = product, B = backtest(P), worst = B.years.reduce(function(a, Y){ return Y.total > a.total ? Y : a; }, B.years[0]);
+    var worstYears = B.years.filter(function(Y){ return Y.total === worst.total; }).map(function(Y){ return Y.y; });
+    var losing = B.years.filter(function(Y){ return Y.lose; });
+    $('btTitle').textContent = '3. Reality check: real storm evenings, 2000–2025';
+    $('btListBtn').hidden = false; $('btListBtn').dataset.closed = 'Show all 47 storm evenings'; if ($('btList').hidden) $('btListBtn').textContent = $('btListBtn').dataset.closed;
+    $('btLead').textContent = 'If Concert Trip Cover had been sold every year since 2000 (' + num(B.C) + ' concerts a year, 100 insured tickets each, ' + money(P.premium) + ' a ticket), these are the real Hong Kong Observatory storm evenings it would have paid on.';
+    $('btStats').innerHTML = '';
+    [['Real storm evenings', '47 in 26 years'], ['Worst year' + (worstYears.length > 1 ? 's' : ''), worstYears.join(' and ') + ' (' + worst.ev.length + ' evenings)'],
+     ['Worst-year claims', money(worst.total) + ' (' + Math.round(worst.total / B.income * 100) + '% of premiums)'], ['Losing years', losing.length + ' of 26']].forEach(function(r){
+      var d = document.createElement('div'); d.innerHTML = '<span></span><b></b>';
+      d.querySelector('span').textContent = r[0]; d.querySelector('b').textContent = r[1]; $('btStats').appendChild(d);
+    });
+    var how = 'Claims on a storm evening = concerts on that evening × 100 tickets × ' + money(B.pay) + '. HKO records the storms, not which concerts were on, so we use ' +
+      (B.stress ? '2 concerts on every storm evening (the busy-weekend stress case).' : 'the average of ' + B.perEve.toFixed(2) + ' concerts an evening (' + num(B.C) + ' ÷ 365).') +
+      ' Other causes add the expected ' + (B.pOther * 100) + '% of shows each year: ' + money(B.other) + '.';
+    var lesson = losing.length
+      ? ' In this view ' + losing.length + ' real year' + (losing.length > 1 ? 's' : '') + ' (' + losing.map(function(Y){ return Y.y; }).join(', ') + ') would have lost money: the reason we hold capital and want reinsurance or a payout cap for busy storm nights.'
+      : ' Weather alone never broke the pool in 26 real years. The losing years in the simulation above come from bad luck stacking up: several concerts on one storm night, plus extra non-weather cancellations.';
+    $('btNote').textContent = how + lesson;
+    var items = $('btItems'); items.innerHTML = '';
+    STORM_EVENINGS.forEach(function(e){ var li = document.createElement('li'); li.textContent = fmtDay(e[0]) + ' · ' + e[1]; items.appendChild(li); });
+    $('btChart').setAttribute('aria-label', 'Bar chart of yearly claims from real storm evenings, 2000 to 2025, against yearly premium income of ' + money(B.income) + '.');
+    var xs = B.years.map(function(Y){ return Y.y; });
+    var names = B.years.map(function(Y){ return Y.ev.length ? Y.ev.map(function(e){ return e[1] + ' (' + fmtDay(e[0]).replace(/ \d{4}$/, '') + ')'; }).join('<br>') : 'No storm evenings'; });
+    plotBacktest(xs, [
+      {type:'bar', name:'Other causes (expected)', x:xs, y:B.years.map(function(){ return B.other; }), muted:true, hovertemplate:'Other causes: HK$%{y:,.0f}<extra></extra>'},
+      {type:'bar', name:'Real storm evenings', x:xs, y:B.years.map(function(Y){ return Y.wx; }), customdata:names, colorFor:B.years.map(function(Y){ return Y.lose; }),
+       hovertemplate:'%{x}: storm claims HK$%{y:,.0f}<br>%{customdata}<extra></extra>'}], B.income, 5);
+  }
+  // Draws (or smoothly updates) the backtest bars against premium income.
+  function plotBacktest(xs, traces, income, dtick){
+    loadPlotly().then(function(Plotly){
+      var css = getComputedStyle(document.documentElement), v = function(n){ return css.getPropertyValue(n).trim(); };
+      var el = $('btChart'); el.hidden = false;
+      traces.forEach(function(t){
+        t.marker = {color:t.muted ? v('--surface-2') : t.colorFor.map(function(l){ return l ? v('--no') : v('--brand'); })};
+        delete t.muted; delete t.colorFor;
+      });
+      Plotly.react(el, traces, {
+        barmode:'stack', margin:{l:84, r:12, t:12, b:40}, height:300, bargap:0.15, showlegend:traces.length > 1,
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', legend:{orientation:'h', y:1.12, x:0},
+        font:{family:'Poppins, system-ui, sans-serif', size:12, color:v('--ink')},
+        xaxis:{type:'category', dtick:dtick, gridcolor:v('--line'), zeroline:false},
+        yaxis:{title:{text:'Claims in the year (HK$)', standoff:10}, tickprefix:'HK$', separatethousands:true, gridcolor:v('--line'), zeroline:false, rangemode:'tozero', automargin:true},
+        shapes:[{type:'line', xref:'paper', x0:0, x1:1, y0:income, y1:income, line:{color:v('--ink'), width:2, dash:'dot'}}],
+        annotations:[{xref:'paper', x:0, y:income, xanchor:'left', yanchor:'bottom', showarrow:false, text:'Premium income ' + money(income), font:{color:v('--ink')}}],
+        transition:{duration:reduce ? 0 : 350, easing:'cubic-in-out'}
+      }, {displayModeBar:false, responsive:true});
+    }, function(){ $('btChart').hidden = true; });
+  }
+  $('btStress').addEventListener('change', runBacktest);
+  $('btListBtn').addEventListener('click', function(){ toggle('btListBtn', 'btList'); });
   function draw(Plotly, S){
     var css = getComputedStyle(document.documentElement), v = function(n){ return css.getPropertyValue(n).trim(); };
     var el = $('simChart'); el.hidden = false;
-    Plotly.newPlot(el, [{
+    Plotly.react(el, [{
       type:'bar', x:S.x, y:S.y,
       marker:{color:S.x.map(function(x){ return x > S.income ? v('--no') : v('--brand'); })},
       hovertemplate:'%{y:,} ' + S.unit + 's with claims of HK$%{x:,.0f}<extra></extra>'
@@ -1148,38 +1431,51 @@ td{font-variant-numeric:tabular-nums}
       xaxis:{title:{text:'Total claims in one ' + S.unit + ' (HK$)'}, tickprefix:'HK$', separatethousands:true, gridcolor:v('--line'), zeroline:false},
       yaxis:{title:{text:'Simulated ' + S.unit + 's'}, gridcolor:v('--line'), zeroline:false, separatethousands:true},
       shapes:[{type:'line', x0:S.income, x1:S.income, yref:'paper', y0:0, y1:1, line:{color:v('--ink'), width:2, dash:'dot'}}],
-      annotations:[{x:S.income, yref:'paper', y:1, xanchor:'left', yanchor:'top', showarrow:false, text:' Premium income', font:{color:v('--ink')}}]
+      annotations:[{x:S.income, yref:'paper', y:1, xanchor:'left', yanchor:'top', showarrow:false, text:' Premium income', font:{color:v('--ink')}}],
+      transition:{duration:reduce ? 0 : 350, easing:'cubic-in-out'}
     }, {displayModeBar:false, responsive:true});
   }
-  function roll(){
-    var P = product, pay = payoutOf(P, P.L), lines = [], hit;
+  // One customer: real random numbers against the chance from the data.
+  function rollOne(P){
+    var lines = [], hit;
     if (P.kind === 'concert'){
-      var u1 = Math.random(), u2 = Math.random(), wx = 47/9497, oth = 0.01;
+      var u1 = Math.random(), u2 = Math.random(), wx = 47/9497, oth = opt('pOther', 1) / 100;
       lines.push('Weather draw ' + u1.toFixed(4) + (u1 < wx ? ' < ' + wx.toFixed(5) + ': Signal 8 or Black Rain on the night!' : ' ≥ ' + wx.toFixed(5) + ': no storm.'));
-      lines.push('Other-cause draw ' + u2.toFixed(4) + (u2 < oth ? ' < 0.0100: the show is called off!' : ' ≥ 0.0100: the show goes ahead.'));
+      lines.push('Other-cause draw ' + u2.toFixed(4) + (u2 < oth ? ' < ' + oth.toFixed(4) + ': the show is called off!' : ' ≥ ' + oth.toFixed(4) + ': the show goes ahead.'));
       hit = u1 < wx || u2 < oth;
     } else {
-      var h = hist(P), y = h[Math.floor(Math.random() * h.length)], u = Math.random();
-      lines.push((y[0] ? 'Year of data drawn: ' + y[0] + ', chance ' + pct(y[1]) + '. ' : '') + 'Random draw ' + u.toFixed(4) + (u < y[1] ? ' < ' + y[1].toFixed(4) + ': the trigger happens!' : ' ≥ ' + y[1].toFixed(4) + ': no trigger.'));
+      var h = histK(P), y = h[Math.floor(Math.random() * h.length)], u = Math.random();
+      lines.push((y[0] ? 'Data drawn: ' + y[0] + ', chance ' + pct(y[1]) + '. ' : '') + 'Random draw ' + u.toFixed(4) + (u < y[1] ? ' < ' + y[1].toFixed(4) + ': the trigger happens!' : ' ≥ ' + y[1].toFixed(4) + ': no trigger.'));
       hit = u < y[1];
     }
-    rolls.n++; if (hit) rolls.hits++;
+    return {hit:hit, lines:lines};
+  }
+  function resetRolls(){ rolls = {n:0, hits:0}; $('rollOut').innerHTML = ''; }
+  function roll(times){
+    var P = product, pay = payoutOf(P, P.L), last, hits = 0;
+    for (var i = 0; i < times; i++){ last = rollOne(P); if (last.hit) hits++; }
+    rolls.n += times; rolls.hits += hits;
     var out = $('rollOut'); out.innerHTML = '';
-    lines.forEach(function(t){ var s = document.createElement('span'); s.textContent = t; out.appendChild(s); });
-    var r = document.createElement('span'); r.className = hit ? 'hit' : '';
-    r.textContent = hit ? 'Result: payout of ' + money(pay) + ' sent automatically.' : 'Result: no payout. The ' + money(P.premium) + ' premium stays in the pool to pay other customers\' claims.';
-    out.appendChild(r);
-    var t = document.createElement('span');
-    var ex = rolls.n * P.p;
-    t.textContent = 'Rolls so far: ' + rolls.n + ', payouts: ' + rolls.hits + ' (expected about ' + (ex >= 0.1 ? ex.toFixed(2) : ex.toPrecision(2)) + ').';
-    out.appendChild(t);
+    function line(t, cls){ var s = document.createElement('span'); if (cls) s.className = cls; s.textContent = t; out.appendChild(s); }
+    if (times === 1){
+      last.lines.forEach(function(t){ line(t); });
+      line(last.hit ? 'Result: payout of ' + money(pay) + ' sent automatically.' : 'Result: no payout. The ' + money(P.premium) + ' premium stays in the pool to pay other customers\' claims.', last.hit ? 'hit' : '');
+    } else {
+      line('Rolled ' + num(times) + ' customers at once' + (P.kind === 'concert' ? ' (each at a different concert)' : '') + ': ' + hits + ' payout' + (hits === 1 ? '' : 's') + '.', hits ? 'hit' : '');
+    }
+    var ex = rolls.n * (P.kind === 'concert' ? 1 - (1 - 47/9497) * (1 - opt('pOther', 1) / 100) : P.p * riskX()), inc = rolls.n * P.premium, paid = rolls.hits * pay;
+    line('Total so far: ' + num(rolls.n) + ' customers, ' + num(rolls.hits) + ' payouts (expected about ' + (ex >= 0.1 ? ex.toFixed(1) : ex.toPrecision(2)) + ').', 'sum');
+    line('Premiums collected ' + money(inc) + ', payouts ' + money(paid) + ': the pool ' + (inc >= paid ? 'keeps ' + money(inc - paid) + ' for costs and capital.' : 'is short by ' + money(paid - inc) + '. Roll more: with more customers the result settles towards the expected loss.'));
   }
   $('simOpen').addEventListener('click', openSim);
   $('simOpen2').addEventListener('click', openSim);
   $('simClose').addEventListener('click', function(){ $('simBox').hidden = true; });
   $('simMoreBtn').addEventListener('click', function(){ toggle('simMoreBtn', 'simMore'); });
-  $('rollBtn').addEventListener('click', roll);
-  $('rerunBtn').addEventListener('click', function(){ runPool(1 + Math.floor(Math.random() * 1e9)); });
+  $('rollBtn').addEventListener('click', function(){ roll(1); });
+  $('roll100').addEventListener('click', function(){ roll(100); });
+  $('roll1000').addEventListener('click', function(){ roll(1000); });
+  $('rollReset').addEventListener('click', resetRolls);
+  $('rerunBtn').addEventListener('click', function(){ runPool(1 + Math.floor(Math.random() * 1e9), true); });
 
   // ---------- Submit ----------
   $('askForm').addEventListener('submit', function(e){

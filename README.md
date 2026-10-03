@@ -31,10 +31,23 @@ Concert Trip Cover: 0.495% weather (HKO) + 1% other causes (documented 4 of abou
 - Built-in products when the AI is unavailable: typhoon travel, delayed baggage, theft, burglary, rain-out
 - Built-in declines: gambling and investments, exams, losses that already happened, phone screens (too likely), lost items (no data)
 
+## Feedback response
+See `changes.html` (linked in the page footer): each teacher comment and what changed.
+
 ## What the page shows
 - **Explain the decision step by step**: what would be insured, then each test as question, rule, why the rule exists, your request and result, then the decision, what would go wrong if we covered it anyway, and what we can cover instead.
 - **How did we get this chance?**: the data, the rate and the conversion to your policy period, with the year-to-year range.
-- **Run the simulation** (on the quote and on the policy): roll real random numbers for one customer, then run the whole pool 10,000 times, drawn with Plotly. One-line model plus every parameter and its source. Concert Cover mirrors the R model (Poisson storm nights, Binomial other cancellations) and gives the same 6.4% losing years and HK$234,500 capital. Other products replay the real years in their data.
+- **Premium breakdown**: how much of each premium pays expected claims and how much covers costs, capital and margin.
+- **Seasonal pricing**: weather covers are priced from HKO counts for the month of the start date (e.g. Typhoon Travel Cover HK$10 in January, HK$125 in September). Concert Trip Cover keeps a flat HK$25 and shows the seasonal price for comparison.
+- **Live HKO check**: weather covers read the Observatory's open warning feed and pause sales while a tropical cyclone signal or rainstorm warning is in force.
+- **Run the simulation** (on the quote and on the policy):
+  1. Roll the dice once, 100 or 1,000 times, with running totals of premiums and payouts.
+  2. The whole pool 10,000 times, drawn with Plotly, with sliders (concert: other-cause rate and number of concerts; other products: pool size and "what if the real chance is ×0.5–×3"). Concert Cover mirrors the R model and gives the same 6.4% losing years, HK$234,500 capital, and about 28% losing years at a 2% other-cause rate.
+  3. Reality check: what each product would have paid in every real year of its data, with named storms for HKO covers (47 concert-hours storm evenings 2000–2025, e.g. Mangkhut 2018) and a busy-night stress test for concerts.
+- The AI worker saves answers for 24 hours, so repeated questions are instant and free (KV namespace `CACHE` if bound, otherwise memory).
+
+## Testing
+`tests/regression.js`: paste into the browser console on the page; 20 checks covering the teacher's cases, the R match, seasonal prices and the live HKO pause.
 
 Chris Wong and the band "The Midnight Echoes" are fictional.
 
